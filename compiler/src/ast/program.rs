@@ -1,5 +1,10 @@
-struct Program {
-    statements: Vec<Box<dyn Statement>>,
+use super::statement::Statement;
+use super::Node;
+
+use std::fmt::{Display, Formatter, Result};
+
+pub struct Program {
+    pub statements: Vec<Statement>,
 }
 
 impl Node for Program {
@@ -8,5 +13,20 @@ impl Node for Program {
             return "".into();
         }
         self.statements[0].token_literal()
+    }
+}
+
+impl Program {
+    pub fn new() -> Program {
+        Program { statements: vec![] }
+    }
+}
+
+impl Display for Program {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        for stmt in &self.statements {
+            write!(f, "{}", stmt)?;
+        }
+        Ok(())
     }
 }

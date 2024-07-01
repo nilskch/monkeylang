@@ -1,5 +1,5 @@
 use super::lexer::Lexer;
-use super::token::TokenType;
+use super::parser::Parser;
 use std::io;
 use std::io::Write;
 
@@ -15,17 +15,8 @@ pub fn start() {
             .read_line(&mut input)
             .expect("Failed to read line");
 
-        let mut lexer = Lexer::new(input);
-        let mut token = lexer.next_token();
-
-        loop {
-            match token.token_type {
-                TokenType::Eof => break,
-                _ => {
-                    println!("{:?}", token);
-                    token = lexer.next_token();
-                }
-            }
-        }
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let _program = parser.parse_program();
     }
 }
