@@ -1,7 +1,5 @@
 mod precedence;
 
-use std::collections::HashMap;
-
 use self::precedence::Precedence;
 use crate::ast::expression::{Expression, Identifier, IntegerLiteral};
 use crate::ast::program::Program;
