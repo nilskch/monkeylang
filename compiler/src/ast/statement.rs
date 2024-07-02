@@ -6,14 +6,16 @@ use super::expression::{Expression, Identifier};
 pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
+    Expr(ExpressionStatement),
     Nil,
 }
 
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match &self {
-            Statement::Let(stmt) => write!(f, "let = {} = {};", stmt.name, stmt.value),
+            Statement::Let(stmt) => write!(f, "let {} = {};", stmt.name, stmt.value),
             Statement::Return(stmt) => write!(f, "return {};", stmt.return_value),
+            Statement::Expr(stmt) => write!(f, "{}", stmt.expression),
             Statement::Nil => write!(f, "nil"),
         }
     }
@@ -41,13 +43,8 @@ impl Node for LetStatement {
 }
 
 impl LetStatement {
-    pub fn new(token: Token, name: Identifier) -> LetStatement {
-        LetStatement {
-            token,
-            name,
-            // TODO: expression empty must be changed once we can parse expressions
-            value: Expression::Empty,
-        }
+    pub fn new(token: Token, name: Identifier, value: Expression) -> LetStatement {
+        LetStatement { token, name, value }
     }
 }
 
@@ -69,6 +66,23 @@ impl ReturnStatement {
             // TODO: expression empty must be changed once we can parse expressions
             return_value: Expression::Empty,
         }
+    }
+}
+
+pub struct ExpressionStatement {
+    token: Token,
+    expression: Expression,
+}
+
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl ExpressionStatement {
+    pub fn new(token: Token, expression: Expression) -> ExpressionStatement {
+        ExpressionStatement { token, expression }
     }
 }
 

@@ -41,7 +41,7 @@ impl Node for Identifier {
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "let = {} = {};", self.token.literal, self.value)
+        write!(f, "{}", self.value)
     }
 }
 

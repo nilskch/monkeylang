@@ -1,4 +1,4 @@
-use crate::ast::expression::Identifier;
+use crate::ast::expression::{Expression, Identifier};
 use crate::ast::program::Program;
 use crate::ast::statement::{LetStatement, ReturnStatement, Statement};
 use crate::lexer::Lexer;
@@ -65,7 +65,7 @@ impl Parser {
             self.next_token()
         }
 
-        Statement::Let(LetStatement::new(token, name))
+        Statement::Let(LetStatement::new(token, name, Expression::Empty))
     }
 
     fn cur_token_is(&self, token_type: TokenType) -> bool {
