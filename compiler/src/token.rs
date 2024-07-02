@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Result};
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     Illegal,
@@ -37,6 +39,50 @@ pub enum TokenType {
     If,
     Else,
     Return,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self {
+            TokenType::Illegal => write!(f, "Illegal"),
+            TokenType::Eof => write!(f, "Eof"),
+
+            // Identifiers + literals
+            TokenType::Ident => write!(f, "Ident"),
+            TokenType::Int => write!(f, "Int"),
+
+            // Operators
+            TokenType::Assign => write!(f, "Assign"),
+            TokenType::Plus => write!(f, "Plus"),
+            TokenType::Minus => write!(f, "Minus"),
+            TokenType::Bang => write!(f, "Bang"),
+            TokenType::Asterik => write!(f, "Asterik"),
+            TokenType::Slash => write!(f, "Slash"),
+
+            TokenType::Lt => write!(f, "Lt"),
+            TokenType::Gt => write!(f, "Gt"),
+
+            TokenType::Eq => write!(f, "Eq"),
+            TokenType::NotEq => write!(f, "NotEq"),
+
+            TokenType::Comma => write!(f, "Comma"),
+            TokenType::Semicolon => write!(f, "Semicolon"),
+
+            TokenType::LParen => write!(f, "LParen"),
+            TokenType::RParen => write!(f, "RParen"),
+            TokenType::LBrace => write!(f, "LBrace"),
+            TokenType::RBrace => write!(f, "RBrace"),
+
+            // Keywords
+            TokenType::Fucntion => write!(f, "Fucntion"),
+            TokenType::Let => write!(f, "Let"),
+            TokenType::True => write!(f, "True"),
+            TokenType::False => write!(f, "False"),
+            TokenType::If => write!(f, "If"),
+            TokenType::Else => write!(f, "Else"),
+            TokenType::Return => write!(f, "Return"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

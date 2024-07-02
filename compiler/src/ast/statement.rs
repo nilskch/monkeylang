@@ -58,13 +58,14 @@ mod tests {
     fn test_let_statements() {
         let input = String::from(
             "
-let x = 5;
-let y = 10;
-let foobar = 838383;",
+lt x =8 ;
+let y x 10;
+le foobar x 838383;",
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();
+        check_parser_errors(parser);
 
         let num_stmt = program.statements.len();
         assert_eq!(
@@ -109,5 +110,21 @@ let foobar = 838383;",
             name,
             let_stmt.name.token_literal()
         )
+    }
+
+    fn check_parser_errors(parser: Parser) {
+        let errors = parser.errors();
+        let num_errors = errors.len();
+
+        if num_errors == 0 {
+            return;
+        }
+
+        println!("parser has {} errors:", num_errors);
+        for msg in errors {
+            println!("parser error: {}", msg)
+        }
+
+        unreachable!();
     }
 }
