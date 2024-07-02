@@ -108,19 +108,18 @@ mod tests {
             _ => unreachable!(),
         };
 
+        let stmt_name = let_stmt.name.value.as_str();
         assert_eq!(
-            let_stmt.name.value.as_str(),
-            name,
+            stmt_name, name,
             "let_stmt.name.value not '{}'. got='{}'",
-            name,
-            let_stmt.name.value.as_str()
+            name, stmt_name
         );
+
+        let token_literal = let_stmt.name.token_literal();
         assert_eq!(
-            let_stmt.name.token_literal(),
-            name,
+            token_literal, name,
             "let_stmt.name.token_literal() not '{}'. got='{}'",
-            name,
-            let_stmt.name.token_literal()
+            name, token_literal
         )
     }
 
@@ -166,11 +165,11 @@ mod tests {
                 _ => unreachable!(),
             };
 
+            let token_literal = return_stmt.token_literal();
             assert_eq!(
-                return_stmt.token_literal(),
-                "return",
+                token_literal, "return",
                 "return_stmt.token_literal() wrong. wanted='return', got='{}'",
-                return_stmt.token_literal()
+                token_literal,
             )
         }
     }
