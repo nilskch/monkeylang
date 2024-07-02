@@ -42,6 +42,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Result<Statement, ()> {
         match self.cur_token.token_type {
             TokenType::Let => Ok(self.parse_let_statement()),
+            TokenType::Return => Ok(self.parse_return_statement()),
             _ => Err(()),
         }
     }
@@ -95,5 +96,9 @@ impl Parser {
             token_type, self.peek_token.token_type
         );
         self.errors.push(msg);
+    }
+
+    fn parse_return_statement(&mut self) -> Statement {
+        Statement::Nil
     }
 }

@@ -5,6 +5,7 @@ use super::expression::{Expression, Identifier};
 
 pub enum Statement {
     Let(LetStatement),
+    Return(ReturnStatement),
     Nil,
 }
 
@@ -12,6 +13,7 @@ impl Display for Statement {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match &self {
             Statement::Let(stmt) => write!(f, "let = {} = {};", stmt.name, stmt.value),
+            Statement::Return(stmt) => write!(f, "return {};", stmt.return_value),
             Statement::Nil => write!(f, "nil"),
         }
     }
@@ -48,6 +50,17 @@ impl LetStatement {
     }
 }
 
+pub struct ReturnStatement {
+    token: Token,
+    return_value: Expression,
+}
+
+impl Node for ReturnStatement {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{lexer::Lexer, parser::Parser};
@@ -56,13 +69,12 @@ mod tests {
 
     #[test]
     fn test_let_statements() {
-        let input = String::from(
-            "
-let x = 10;
-let y = 10;
-let foobar = 10;",
-        );
-        let lexer = Lexer::new(input);
+        let input = "
+            let x = 5;
+            let y = 10;
+            let foobar = 838383;
+        ";
+        let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();
         check_parser_errors(parser);
@@ -86,7 +98,7 @@ let foobar = 10;",
         assert_eq!(
             stmt.token_literal(),
             "let",
-            "stmt.token_literal() not 'let', got={}",
+            "stmt.token_literal() not 'let'. got={}",
             stmt.token_literal()
         );
 
@@ -126,5 +138,40 @@ let foobar = 10;",
         }
 
         unreachable!();
+    }
+
+    #[test]
+    fn test_return_statements() {
+        let input = "
+            return 5;
+            return 10;
+            return 993322;
+        ";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let num_stmt = program.statements.len();
+        assert_eq!(
+            num_stmt, 3,
+            "program.statements.len() wrong. expected={}, got={}",
+            3, num_stmt
+        );
+
+        for stmt in program.statements {
+            assert!(matches!(stmt, Statement::Return(_)));
+            let return_stmt = match stmt {
+                Statement::Return(stmt) => stmt,
+                _ => unreachable!(),
+            };
+
+            assert_eq!(
+                return_stmt.token_literal(),
+                "return",
+                "return_stmt.token_literal() wrong. wanted='return', got='{}'",
+                return_stmt.token_literal()
+            )
+        }
     }
 }
