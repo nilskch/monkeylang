@@ -1,6 +1,6 @@
 use crate::ast::expression::Identifier;
 use crate::ast::program::Program;
-use crate::ast::statement::{LetStatement, Statement};
+use crate::ast::statement::{LetStatement, ReturnStatement, Statement};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
@@ -99,6 +99,14 @@ impl Parser {
     }
 
     fn parse_return_statement(&mut self) -> Statement {
-        Statement::Nil
+        let token = self.cur_token.clone();
+        let return_stmt = ReturnStatement::new(token);
+
+        self.next_token();
+        while !self.cur_token_is(TokenType::Semicolon) {
+            self.next_token();
+        }
+
+        Statement::Return(return_stmt)
     }
 }

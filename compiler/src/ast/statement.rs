@@ -45,6 +45,7 @@ impl LetStatement {
         LetStatement {
             token,
             name,
+            // TODO: expression empty must be changed once we can parse expressions
             value: Expression::Empty,
         }
     }
@@ -58,6 +59,16 @@ pub struct ReturnStatement {
 impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+}
+
+impl ReturnStatement {
+    pub fn new(token: Token) -> ReturnStatement {
+        ReturnStatement {
+            token,
+            // TODO: expression empty must be changed once we can parse expressions
+            return_value: Expression::Empty,
+        }
     }
 }
 
