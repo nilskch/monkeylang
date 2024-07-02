@@ -63,9 +63,10 @@ impl Parser {
         Statement::Expr(ExpressionStatement::new(token, expression))
     }
 
-    fn parse_expression(&mut self, precedence: Precedence) -> Expression {
+    fn parse_expression(&mut self, _precedence: Precedence) -> Expression {
         let left_expr = match self.cur_token.token_type {
             TokenType::Ident => self.parse_identifier(),
+            TokenType::Int => self.parse_integer_literal(),
             _ => return Expression::Nil,
         };
 
@@ -76,6 +77,11 @@ impl Parser {
         let token = self.cur_token.clone();
         let literal = token.literal.clone();
         Expression::Ident(Identifier::new(token, literal))
+    }
+
+    fn parse_integer_literal(&mut self) -> Expression {
+        // TODO: implement
+        Expression::Nil
     }
 
     fn parse_let_statement(&mut self) -> Statement {
@@ -295,6 +301,49 @@ mod tests {
         assert_eq!(
             token_literal, "foobar",
             "ident.token_literal() not 'foobar'. got='{}'",
+            token_literal
+        );
+    }
+
+    #[test]
+    fn test_integer_literal_expression() {
+        let input = "5";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let num_stmts = program.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "program.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = program.statements[0].clone();
+        assert!(matches!(stmt, Statement::Expr(_)),);
+
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        assert!(matches!(expr_stmt.expression, Expression::Integer(_)));
+
+        let integer = match expr_stmt.expression {
+            Expression::Integer(integer) => integer,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            integer.value, 5,
+            "integer.value not 'foobar'. got='{}'",
+            integer.value
+        );
+
+        let token_literal = integer.token_literal();
+        assert_eq!(
+            token_literal, "5",
+            "integer.token_literal() not 'foobar'. got='{}'",
             token_literal
         );
     }

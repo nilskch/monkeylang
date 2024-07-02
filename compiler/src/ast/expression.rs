@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter, Result};
 #[derive(Clone)]
 pub enum Expression {
     Ident(Identifier),
+    Integer(IntegerLiteral),
     Nil,
 }
 
@@ -12,6 +13,7 @@ impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match &self {
             Expression::Ident(ident) => write!(f, "{}", ident),
+            Expression::Integer(integer) => write!(f, "{}", integer),
             Expression::Nil => unreachable!(),
         }
     }
@@ -21,6 +23,7 @@ impl Node for Expression {
     fn token_literal(&self) -> String {
         match self {
             Expression::Ident(ident) => ident.token_literal(),
+            Expression::Integer(integer) => integer.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -47,5 +50,29 @@ impl Display for Identifier {
 impl Identifier {
     pub fn new(token: Token, value: String) -> Identifier {
         Identifier { token, value }
+    }
+}
+
+#[derive(Clone)]
+pub struct IntegerLiteral {
+    pub token: Token,
+    pub value: i64,
+}
+
+impl Node for IntegerLiteral {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Display for IntegerLiteral {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.token.literal)
+    }
+}
+
+impl IntegerLiteral {
+    pub fn new(token: Token, value: i64) -> IntegerLiteral {
+        IntegerLiteral { token, value }
     }
 }
