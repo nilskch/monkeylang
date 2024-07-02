@@ -60,11 +60,10 @@ impl Node for ReturnStatement {
 }
 
 impl ReturnStatement {
-    pub fn new(token: Token) -> ReturnStatement {
+    pub fn new(token: Token, return_value: Expression) -> ReturnStatement {
         ReturnStatement {
             token,
-            // TODO: expression empty must be changed once we can parse expressions
-            return_value: Expression::Empty,
+            return_value,
         }
     }
 }

@@ -100,13 +100,15 @@ impl Parser {
 
     fn parse_return_statement(&mut self) -> Statement {
         let token = self.cur_token.clone();
-        let return_stmt = ReturnStatement::new(token);
+        // TODO: parse correct return_value from expression
+        let return_value = Expression::Empty;
 
         self.next_token();
         while !self.cur_token_is(TokenType::Semicolon) {
             self.next_token();
         }
 
+        let return_stmt = ReturnStatement::new(token, return_value);
         Statement::Return(return_stmt)
     }
 }
