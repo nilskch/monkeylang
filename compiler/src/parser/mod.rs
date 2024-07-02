@@ -3,7 +3,7 @@ mod precedence;
 use std::collections::HashMap;
 
 use self::precedence::Precedence;
-use crate::ast::expression::{Expression, Identifier};
+use crate::ast::expression::{Expression, Identifier, IntegerLiteral};
 use crate::ast::program::Program;
 use crate::ast::statement::{ExpressionStatement, LetStatement, ReturnStatement, Statement};
 use crate::lexer::Lexer;
@@ -80,8 +80,17 @@ impl Parser {
     }
 
     fn parse_integer_literal(&mut self) -> Expression {
-        // TODO: implement
-        Expression::Nil
+        let token = self.cur_token.clone();
+        let value = match token.literal.parse::<i64>() {
+            Ok(value) => value,
+            Err(_) => {
+                let msg = format!("could not parse '{}' to integer", token.literal);
+                self.errors.push(msg);
+                return Expression::Nil;
+            }
+        };
+
+        Expression::Integer(IntegerLiteral::new(token, value))
     }
 
     fn parse_let_statement(&mut self) -> Statement {
