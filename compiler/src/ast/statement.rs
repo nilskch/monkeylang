@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result};
 
 use super::expression::{Expression, Identifier};
 
+#[derive(Clone)]
 pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
@@ -30,10 +31,11 @@ impl Node for Statement {
     }
 }
 
+#[derive(Clone)]
 pub struct LetStatement {
-    token: Token,      // token.Let
-    name: Identifier,  // five
-    value: Expression, // 5
+    pub token: Token,      // token.Let
+    pub name: Identifier,  // five
+    pub value: Expression, // 5
 }
 
 impl Node for LetStatement {
@@ -48,6 +50,7 @@ impl LetStatement {
     }
 }
 
+#[derive(Clone)]
 pub struct ReturnStatement {
     token: Token,
     return_value: Expression,
@@ -68,9 +71,10 @@ impl ReturnStatement {
     }
 }
 
+#[derive(Clone)]
 pub struct ExpressionStatement {
-    token: Token,
-    expression: Expression,
+    pub token: Token,
+    pub expression: Expression,
 }
 
 impl Node for ExpressionStatement {
@@ -82,119 +86,5 @@ impl Node for ExpressionStatement {
 impl ExpressionStatement {
     pub fn new(token: Token, expression: Expression) -> ExpressionStatement {
         ExpressionStatement { token, expression }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{lexer::Lexer, parser::Parser};
-
-    use super::*;
-
-    #[test]
-    fn test_let_statements() {
-        let input = "
-            let x = 5;
-            let y = 10;
-            let foobar = 838383;
-        ";
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-        check_parser_errors(parser);
-
-        let num_stmt = program.statements.len();
-        assert_eq!(
-            num_stmt, 3,
-            "program.statements.len() wrong. expected={}, got={}",
-            3, num_stmt
-        );
-
-        let tests = ["x", "y", "foobar"];
-
-        for (i, &expected) in tests.iter().enumerate() {
-            let stmt = &program.statements[i];
-            test_let_statement(stmt, expected);
-        }
-    }
-
-    fn test_let_statement(stmt: &Statement, name: &str) {
-        assert_eq!(
-            stmt.token_literal(),
-            "let",
-            "stmt.token_literal() not 'let'. got={}",
-            stmt.token_literal()
-        );
-
-        assert!(matches!(stmt, Statement::Let(_)));
-        let let_stmt = match stmt {
-            Statement::Let(stmt) => stmt,
-            _ => unreachable!(),
-        };
-
-        let stmt_name = let_stmt.name.value.as_str();
-        assert_eq!(
-            stmt_name, name,
-            "let_stmt.name.value not '{}'. got='{}'",
-            name, stmt_name
-        );
-
-        let token_literal = let_stmt.name.token_literal();
-        assert_eq!(
-            token_literal, name,
-            "let_stmt.name.token_literal() not '{}'. got='{}'",
-            name, token_literal
-        )
-    }
-
-    fn check_parser_errors(parser: Parser) {
-        let errors = parser.errors();
-        let num_errors = errors.len();
-
-        if num_errors == 0 {
-            return;
-        }
-
-        println!("parser has {} errors:", num_errors);
-        for msg in errors {
-            println!("parser error: {}", msg)
-        }
-
-        unreachable!();
-    }
-
-    #[test]
-    fn test_return_statements() {
-        let input = "
-            return 5;
-            return 10;
-            return 993322;
-        ";
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-        check_parser_errors(parser);
-
-        let num_stmt = program.statements.len();
-        assert_eq!(
-            num_stmt, 3,
-            "program.statements.len() wrong. expected={}, got={}",
-            3, num_stmt
-        );
-
-        for stmt in program.statements {
-            assert!(matches!(stmt, Statement::Return(_)));
-            let return_stmt = match stmt {
-                Statement::Return(stmt) => stmt,
-                _ => unreachable!(),
-            };
-
-            let token_literal = return_stmt.token_literal();
-            assert_eq!(
-                token_literal, "return",
-                "return_stmt.token_literal() wrong. wanted='return', got='{}'",
-                token_literal,
-            )
-        }
     }
 }

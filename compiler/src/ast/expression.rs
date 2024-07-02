@@ -1,20 +1,18 @@
 use super::Node;
 use crate::token::Token;
-use std::{
-    fmt::{Display, Formatter, Result},
-    iter::Empty,
-};
+use std::fmt::{Display, Formatter, Result};
 
+#[derive(Clone)]
 pub enum Expression {
     Ident(Identifier),
-    Empty, // only for development
+    Nil,
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match &self {
             Expression::Ident(ident) => write!(f, "{}", ident),
-            Expression::Empty => unreachable!(),
+            Expression::Nil => unreachable!(),
         }
     }
 }
@@ -23,11 +21,12 @@ impl Node for Expression {
     fn token_literal(&self) -> String {
         match self {
             Expression::Ident(ident) => ident.token_literal(),
-            Expression::Empty => unreachable!(),
+            Expression::Nil => unreachable!(),
         }
     }
 }
 
+#[derive(Clone)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,

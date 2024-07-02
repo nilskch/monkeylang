@@ -2,7 +2,7 @@ pub mod expression;
 pub mod program;
 pub mod statement;
 
-trait Node {
+pub trait Node {
     fn token_literal(&self) -> String;
 }
 
