@@ -1,22 +1,14 @@
-use clap::Parser;
-
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
-
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
-}
+use clap::{Arg, Command};
 
 fn main() {
-    let args = Args::parse();
-
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name);
-    }
+    let _m = Command::new("My Program")
+        .author("Nils Koch, mail@nilskch.dev")
+        .version("1.0.2")
+        .about("Explains in brief what the program does")
+        .arg(Arg::new("in_file"))
+        .after_help(
+            "Longer explanation to appear after the options when \
+                     displaying the help information from --help or -h",
+        )
+        .get_matches();
 }
