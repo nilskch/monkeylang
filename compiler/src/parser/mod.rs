@@ -52,6 +52,7 @@ impl Parser {
         if !self.expect_peek(TokenType::Ident) {
             return Statement::Nil;
         }
+
         let name = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
 
         if !self.expect_peek(TokenType::Assign) {
@@ -59,7 +60,6 @@ impl Parser {
         }
 
         // skip expression until we encouter semicolon
-
         while !self.cur_token_is(TokenType::Semicolon) {
             self.next_token()
         }
@@ -94,7 +94,6 @@ impl Parser {
             "expected next token to be '{}', but got '{}' instead",
             token_type, self.peek_token.token_type
         );
-        println!("HELLOOOOO");
         self.errors.push(msg);
     }
 }

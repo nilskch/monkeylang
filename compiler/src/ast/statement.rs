@@ -58,9 +58,9 @@ mod tests {
     fn test_let_statements() {
         let input = String::from(
             "
-lt x =8 ;
-let y x 10;
-le foobar x 838383;",
+let x = 10;
+let y = 10;
+let foobar = 10;",
         );
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
