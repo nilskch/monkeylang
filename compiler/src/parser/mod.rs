@@ -197,7 +197,6 @@ mod tests {
             stmt.token_literal()
         );
 
-        assert!(matches!(stmt, Statement::Let(_)));
         let let_stmt = match stmt {
             Statement::Let(stmt) => stmt,
             _ => unreachable!(),
@@ -254,7 +253,6 @@ mod tests {
         );
 
         for stmt in program.statements {
-            assert!(matches!(stmt, Statement::Return(_)));
             let return_stmt = match stmt {
                 Statement::Return(stmt) => stmt,
                 _ => unreachable!(),
@@ -284,14 +282,10 @@ mod tests {
         );
 
         let stmt = program.statements[0].clone();
-        assert!(matches!(stmt, Statement::Expr(_)));
-
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
-
-        assert!(matches!(expr_stmt.expression, Expression::Ident(_)));
 
         let ident = match expr_stmt.expression {
             Expression::Ident(ident) => ident,
@@ -327,14 +321,10 @@ mod tests {
         );
 
         let stmt = program.statements[0].clone();
-        assert!(matches!(stmt, Statement::Expr(_)),);
-
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
-
-        assert!(matches!(expr_stmt.expression, Expression::Integer(_)));
 
         let integer = match expr_stmt.expression {
             Expression::Integer(integer) => integer,
@@ -353,5 +343,64 @@ mod tests {
             "integer.token_literal() not 'foobar'. got='{}'",
             token_literal
         );
+    }
+
+    #[test]
+    fn test_parsing_prefix_expressions() {
+        let prefix_tests = [("!5;", "!", 5), ("-15;", "-", 15)];
+
+        for (input, operator, integer_value) in prefix_tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            check_parser_errors(parser);
+
+            let num_stmts = program.statements.len();
+            assert_eq!(
+                num_stmts, 1,
+                "program.statements.len() wrong. expected={}, got={}",
+                1, num_stmts
+            );
+
+            let stmt = program.statements[0].clone();
+            let expr_stmt = match stmt {
+                Statement::Expr(stmt) => stmt,
+                _ => unreachable!(),
+            };
+
+            let prefix_expr = match expr_stmt.expression {
+                Expression::Prefix(prefix_expr) => prefix_expr,
+                _ => unreachable!(),
+            };
+
+            assert_eq!(
+                prefix_expr.operator, operator,
+                "prefix_expr.operator is not '{}'. got='{}'",
+                operator, prefix_expr.operator
+            );
+
+            test_integer_literal(*prefix_expr.right, integer_value);
+        }
+    }
+
+    fn test_integer_literal(expr: Expression, value: i64) {
+        let integer = match expr {
+            Expression::Integer(integer) => integer,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            integer.value, value,
+            "integer.value not {}. got={}",
+            value, integer.value
+        );
+
+        let token_literal = integer.token_literal();
+        let expected_token_literal = value.to_string();
+        assert_eq!(
+            token_literal, expected_token_literal,
+            "integer.token_literal() not '{}'. got=''{}",
+            expected_token_literal, token_literal
+        )
     }
 }
