@@ -1,7 +1,7 @@
 mod precedence;
 
 use self::precedence::Precedence;
-use crate::ast::expression::{Expression, Identifier, IntegerLiteral};
+use crate::ast::expression::{Expression, Identifier, IntegerLiteral, PrefixExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{ExpressionStatement, LetStatement, ReturnStatement, Statement};
 use crate::lexer::Lexer;
@@ -65,7 +65,11 @@ impl Parser {
         let left_expr = match self.cur_token.token_type {
             TokenType::Ident => self.parse_identifier(),
             TokenType::Int => self.parse_integer_literal(),
-            _ => return Expression::Nil,
+            TokenType::Bang | TokenType::Minus => self.parse_prefix_expression(),
+            _ => {
+                self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
+                return Expression::Nil;
+            }
         };
 
         left_expr
@@ -89,6 +93,17 @@ impl Parser {
         };
 
         Expression::Integer(IntegerLiteral::new(token, value))
+    }
+
+    fn parse_prefix_expression(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+        let operator = self.cur_token.literal.clone();
+
+        self.next_token();
+
+        let right_expression = self.parse_expression(Precedence::Prefix);
+
+        Expression::Prefix(PrefixExpression::new(token, operator, right_expression))
     }
 
     fn parse_let_statement(&mut self) -> Statement {
@@ -154,6 +169,11 @@ impl Parser {
 
         let return_stmt = ReturnStatement::new(token, return_value);
         Statement::Return(return_stmt)
+    }
+
+    fn no_prefix_parse_fn_error(&mut self, token_type: TokenType) {
+        let msg = format!("no prefix parse function for {} found", token_type);
+        self.errors.push(msg);
     }
 }
 

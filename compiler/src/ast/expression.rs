@@ -95,7 +95,7 @@ impl Node for PrefixExpression {
 
 impl Display for PrefixExpression {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}", self.token.literal)
+        write!(f, "({}{})", self.operator, self.right)
     }
 }
 

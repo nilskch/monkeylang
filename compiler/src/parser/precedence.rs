@@ -4,6 +4,6 @@ pub enum Precedence {
     //LessGreater, // > or <
     //Sum,         // +
     //Product,     // *
-    //Prefix,      // -X or !X
-    //Call,        // myFunction(X)
+    Prefix, // -X or !X
+            // Call,        // myFunction(X)
 }
