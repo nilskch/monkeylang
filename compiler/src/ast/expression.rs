@@ -98,3 +98,13 @@ impl Display for PrefixExpression {
         write!(f, "{}", self.token.literal)
     }
 }
+
+impl PrefixExpression {
+    pub fn new(token: Token, operator: String, right: Expression) -> PrefixExpression {
+        PrefixExpression {
+            token,
+            operator,
+            right: Box::new(right),
+        }
+    }
+}
