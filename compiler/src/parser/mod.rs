@@ -79,7 +79,7 @@ impl Parser {
         if self.peek_token_is(TokenType::Semicolon) || precedence >= self.peek_precedence() {
             return left_expr;
         }
-        // this is rubbish and need rework
+
         while !self.peek_token_is(TokenType::Semicolon) && precedence < self.peek_precedence() {
             left_expr = match self.peek_token.token_type {
                 TokenType::Plus
@@ -475,14 +475,14 @@ mod tests {
     #[test]
     fn test_parsing_infix_expressions() {
         let infix_tests = [
-            ("5 + 5;", 5, "+", 5),
-            ("5 - 5;", 5, "-", 5),
-            ("5 * 5;", 5, "*", 5),
-            ("5 / 5;", 5, "/", 5),
-            ("5 > 5;", 5, ">", 5),
-            ("5 < 5;", 5, "<", 5),
-            ("5 == 5;", 5, "==", 5),
-            ("5 != 5;", 5, "!=", 5),
+            ("6 + 5;", 6, "+", 5),
+            ("6 - 5;", 6, "-", 5),
+            ("6 * 5;", 6, "*", 5),
+            ("6 / 5;", 6, "/", 5),
+            ("6 > 5;", 6, ">", 5),
+            ("6 < 5;", 6, "<", 5),
+            ("6 == 5;", 6, "==", 5),
+            ("6 != 5;", 6, "!=", 5),
         ];
 
         for (input, left_value, operator, right_value) in infix_tests {
@@ -516,6 +516,41 @@ mod tests {
                 operator, infix_expr.operator
             );
             test_integer_literal(*infix_expr.right, right_value);
+        }
+    }
+
+    #[test]
+    fn test_operator_precedence_parsing() {
+        let tests = [
+            ("-a * b", "((-a) * b)"),
+            ("!-a", "(!(-a))"),
+            ("a + b + c", "((a + b) + c)"),
+            ("a + b - c", "((a + b) - c)"),
+            ("a * b * c", "((a * b) * c)"),
+            ("a * b / c", "((a * b) / c)"),
+            ("a + b / c", "(a + (b / c))"),
+            ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+            ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+            ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+            ("5 > 4 != 3 < 4", "((5 > 4) != (3 < 4))"),
+            (
+                "3 + 4 * 5 == 3 * 1 + 4 * 5",
+                "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+            ),
+        ];
+
+        for (input, expected) in tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            check_parser_errors(parser);
+
+            let actual = program.to_string();
+            assert_eq!(
+                actual, expected,
+                "expected='{}'. got='{}'",
+                expected, actual
+            );
         }
     }
 }
