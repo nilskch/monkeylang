@@ -131,3 +131,19 @@ impl Display for InfixExpression {
         write!(f, "({} {} {})", self.left, self.operator, self.right)
     }
 }
+
+impl InfixExpression {
+    pub fn new(
+        token: Token,
+        left: Expression,
+        operator: String,
+        right: Expression,
+    ) -> InfixExpression {
+        InfixExpression {
+            token,
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        }
+    }
+}

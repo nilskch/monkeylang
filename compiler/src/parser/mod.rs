@@ -1,7 +1,11 @@
 mod precedence;
 
+use precedence::PRECEDENCES;
+
 use self::precedence::Precedence;
-use crate::ast::expression::{Expression, Identifier, IntegerLiteral, PrefixExpression};
+use crate::ast::expression::{
+    Expression, Identifier, InfixExpression, IntegerLiteral, PrefixExpression,
+};
 use crate::ast::program::Program;
 use crate::ast::statement::{ExpressionStatement, LetStatement, ReturnStatement, Statement};
 use crate::lexer::Lexer;
@@ -54,15 +58,15 @@ impl Parser {
         let token = self.cur_token.clone();
         let expression = self.parse_expression(Precedence::Lowest);
 
-        if self.peek_token_is(&TokenType::Semicolon) {
+        if self.peek_token_is(TokenType::Semicolon) {
             self.next_token();
         }
 
         Statement::Expr(ExpressionStatement::new(token, expression))
     }
 
-    fn parse_expression(&mut self, _precedence: Precedence) -> Expression {
-        let left_expr = match self.cur_token.token_type {
+    fn parse_expression(&mut self, precedence: Precedence) -> Expression {
+        let mut left_expr = match self.cur_token.token_type {
             TokenType::Ident => self.parse_identifier(),
             TokenType::Int => self.parse_integer_literal(),
             TokenType::Bang | TokenType::Minus => self.parse_prefix_expression(),
@@ -71,6 +75,27 @@ impl Parser {
                 return Expression::Nil;
             }
         };
+
+        if self.peek_token_is(TokenType::Semicolon) || precedence >= self.peek_precedence() {
+            return left_expr;
+        }
+        // this is rubbish and need rework
+        while !self.peek_token_is(TokenType::Semicolon) && precedence < self.peek_precedence() {
+            left_expr = match self.peek_token.token_type {
+                TokenType::Plus
+                | TokenType::Minus
+                | TokenType::Slash
+                | TokenType::Asterik
+                | TokenType::Eq
+                | TokenType::NotEq
+                | TokenType::Lt
+                | TokenType::Gt => {
+                    self.next_token();
+                    self.parse_infix_expression(left_expr)
+                }
+                _ => return left_expr,
+            };
+        }
 
         left_expr
     }
@@ -131,12 +156,12 @@ impl Parser {
         self.cur_token.token_type == token_type
     }
 
-    fn peek_token_is(&self, token_type: &TokenType) -> bool {
-        self.peek_token.token_type == *token_type
+    fn peek_token_is(&self, token_type: TokenType) -> bool {
+        self.peek_token.token_type == token_type
     }
 
     fn expect_peek(&mut self, token_type: TokenType) -> bool {
-        if self.peek_token_is(&token_type) {
+        if self.peek_token_is(token_type.clone()) {
             self.next_token();
             true
         } else {
@@ -159,7 +184,6 @@ impl Parser {
 
     fn parse_return_statement(&mut self) -> Statement {
         let token = self.cur_token.clone();
-        // TODO: parse correct return_value from expression
         let return_value = Expression::Nil;
 
         self.next_token();
@@ -174,6 +198,30 @@ impl Parser {
     fn no_prefix_parse_fn_error(&mut self, token_type: TokenType) {
         let msg = format!("no prefix parse function for {} found", token_type);
         self.errors.push(msg);
+    }
+
+    fn peek_precedence(&self) -> Precedence {
+        match PRECEDENCES.get(&self.peek_token.token_type) {
+            Some(precedence) => precedence.clone(),
+            None => Precedence::Lowest,
+        }
+    }
+
+    fn cur_precedence(&self) -> Precedence {
+        match PRECEDENCES.get(&self.cur_token.token_type) {
+            Some(precedence) => precedence.clone(),
+            None => Precedence::Lowest,
+        }
+    }
+
+    fn parse_infix_expression(&mut self, left: Expression) -> Expression {
+        let token = self.cur_token.clone();
+        let operator = self.cur_token.literal.clone();
+        let prec = self.cur_precedence();
+        self.next_token();
+        let right = self.parse_expression(prec);
+
+        Expression::Infix(InfixExpression::new(token, left, operator, right))
     }
 }
 
