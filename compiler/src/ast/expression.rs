@@ -7,6 +7,7 @@ pub enum Expression {
     Ident(Identifier),
     Integer(IntegerLiteral),
     Prefix(PrefixExpression),
+    Infix(InfixExpression),
     Nil,
 }
 
@@ -16,6 +17,7 @@ impl Display for Expression {
             Expression::Ident(ident) => write!(f, "{}", ident),
             Expression::Integer(integer) => write!(f, "{}", integer),
             Expression::Prefix(prefix_expr) => write!(f, "{}", prefix_expr),
+            Expression::Infix(infix_expr) => write!(f, "{}", infix_expr),
             Expression::Nil => unreachable!(),
         }
     }
@@ -27,6 +29,7 @@ impl Node for Expression {
             Expression::Ident(ident) => ident.token_literal(),
             Expression::Integer(integer) => integer.token_literal(),
             Expression::Prefix(prefix_expr) => prefix_expr.token_literal(),
+            Expression::Infix(infix_expr) => infix_expr.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -106,5 +109,25 @@ impl PrefixExpression {
             operator,
             right: Box::new(right),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct InfixExpression {
+    pub token: Token,
+    pub left: Box<Expression>,
+    pub operator: String,
+    pub right: Box<Expression>,
+}
+
+impl Node for InfixExpression {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Display for InfixExpression {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "({} {} {})", self.left, self.operator, self.right)
     }
 }

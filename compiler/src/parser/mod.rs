@@ -423,4 +423,51 @@ mod tests {
             expected_token_literal, token_literal
         )
     }
+
+    #[test]
+    fn test_parsing_infix_expressions() {
+        let infix_tests = [
+            ("5 + 5;", 5, "+", 5),
+            ("5 - 5;", 5, "-", 5),
+            ("5 * 5;", 5, "*", 5),
+            ("5 / 5;", 5, "/", 5),
+            ("5 > 5;", 5, ">", 5),
+            ("5 < 5;", 5, "<", 5),
+            ("5 == 5;", 5, "==", 5),
+            ("5 != 5;", 5, "!=", 5),
+        ];
+
+        for (input, left_value, operator, right_value) in infix_tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            check_parser_errors(parser);
+
+            let num_stmts = program.statements.len();
+            assert_eq!(
+                num_stmts, 1,
+                "program.statements.len() wrong. expected={}, got={}",
+                1, num_stmts
+            );
+
+            let stmt = program.statements[0].clone();
+            let expr_stmt = match stmt {
+                Statement::Expr(stmt) => stmt,
+                _ => unreachable!(),
+            };
+
+            let infix_expr = match expr_stmt.expression {
+                Expression::Infix(infix_expr) => infix_expr,
+                _ => unreachable!(),
+            };
+
+            test_integer_literal(*infix_expr.left, left_value);
+            assert_eq!(
+                infix_expr.operator, operator,
+                "infix_expr.operator is not '{}'. got='{}'.",
+                operator, infix_expr.operator
+            );
+            test_integer_literal(*infix_expr.right, right_value);
+        }
+    }
 }
