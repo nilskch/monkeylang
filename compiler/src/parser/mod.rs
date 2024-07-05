@@ -553,4 +553,38 @@ mod tests {
             );
         }
     }
+
+    fn test_identifier(expr: Expression, value: String) {
+        let ident = match expr.expression {
+            Expression::Ident(ident) => ident,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            ident.value, value,
+            "ident.value not '{}', got='{}'",
+            value, ident.value
+        );
+
+        let token_literal = ident.token_literal();
+        assert_eq!(
+            token_literal, value,
+            "ident.token_literal() not '{}', got='{}'",
+            token_literal, value
+        );
+    }
+
+    fn test_infix_expression(
+        expr: Expression,
+        left: Expression,
+        operator: String,
+        right: Expression,
+    ) {
+        let infix_expr = match expr {
+            Expression::Infix(infix_expr) => infix_expr,
+            _ => unreachable!(),
+        };
+
+        // TODO: implement the rest
+    }
 }
