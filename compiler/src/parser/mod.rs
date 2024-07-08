@@ -4,7 +4,7 @@ use precedence::PRECEDENCES;
 
 use self::precedence::Precedence;
 use crate::ast::expression::{
-    Expression, Identifier, InfixExpression, IntegerLiteral, PrefixExpression,
+    BooleanLiteral, Expression, Identifier, InfixExpression, IntegerLiteral, PrefixExpression,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{ExpressionStatement, LetStatement, ReturnStatement, Statement};
@@ -65,11 +65,19 @@ impl Parser {
         Statement::Expr(ExpressionStatement::new(token, expression))
     }
 
+    fn parse_boolean_expression(&self) -> Expression {
+        Expression::Boolean(BooleanLiteral::new(
+            self.cur_token.clone(),
+            self.cur_token_is(TokenType::True),
+        ))
+    }
+
     fn parse_expression(&mut self, precedence: Precedence) -> Expression {
         let mut left_expr = match self.cur_token.token_type {
             TokenType::Ident => self.parse_identifier(),
             TokenType::Int => self.parse_integer_literal(),
             TokenType::Bang | TokenType::Minus => self.parse_prefix_expression(),
+            TokenType::True | TokenType::False => self.parse_boolean_expression(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
@@ -184,10 +192,11 @@ impl Parser {
 
     fn parse_return_statement(&mut self) -> Statement {
         let token = self.cur_token.clone();
-        let return_value = Expression::Nil;
 
         self.next_token();
-        while !self.cur_token_is(TokenType::Semicolon) {
+        let return_value = self.parse_expression(Precedence::Lowest);
+
+        if self.peek_token_is(TokenType::Semicolon) {
             self.next_token();
         }
 
@@ -229,6 +238,12 @@ impl Parser {
 mod tests {
     use super::*;
     use crate::ast::Node;
+
+    enum ExpectedValue {
+        Integer(i64),
+        String(String),
+        Boolean(bool),
+    }
 
     #[test]
     fn test_let_statements() {
@@ -303,24 +318,29 @@ mod tests {
 
     #[test]
     fn test_return_statements() {
-        let input = "
-            return 5;
-            return 10;
-            return 993322;
-        ";
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-        check_parser_errors(parser);
+        let tests = [
+            ("return 5;", ExpectedValue::Integer(5)),
+            ("return true;", ExpectedValue::Boolean(true)),
+            (
+                "return foobar;",
+                ExpectedValue::String("foobar".to_string()),
+            ),
+        ];
 
-        let num_stmt = program.statements.len();
-        assert_eq!(
-            num_stmt, 3,
-            "program.statements.len() wrong. expected={}, got={}",
-            3, num_stmt
-        );
+        for (input, expected) in tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            check_parser_errors(parser);
 
-        for stmt in program.statements {
+            let num_stmt = program.statements.len();
+            assert_eq!(
+                num_stmt, 1,
+                "program.statements.len() wrong. expected={}, got={}",
+                1, num_stmt
+            );
+
+            let stmt = program.statements[0].clone();
             let return_stmt = match stmt {
                 Statement::Return(stmt) => stmt,
                 _ => unreachable!(),
@@ -331,7 +351,9 @@ mod tests {
                 token_literal, "return",
                 "return_stmt.token_literal() wrong. wanted='return', got='{}'",
                 token_literal,
-            )
+            );
+
+            test_literal_expression(return_stmt.return_value, expected)
         }
     }
 
@@ -452,6 +474,7 @@ mod tests {
     }
 
     fn test_integer_literal(expr: Expression, value: i64) {
+        println!("FOOBAR: {}", expr);
         let integer = match expr {
             Expression::Integer(integer) => integer,
             _ => unreachable!(),
@@ -475,14 +498,54 @@ mod tests {
     #[test]
     fn test_parsing_infix_expressions() {
         let infix_tests = [
-            ("6 + 5;", 6, "+", 5),
-            ("6 - 5;", 6, "-", 5),
-            ("6 * 5;", 6, "*", 5),
-            ("6 / 5;", 6, "/", 5),
-            ("6 > 5;", 6, ">", 5),
-            ("6 < 5;", 6, "<", 5),
-            ("6 == 5;", 6, "==", 5),
-            ("6 != 5;", 6, "!=", 5),
+            (
+                "6 + 5;",
+                ExpectedValue::Integer(6),
+                "+",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 - 5;",
+                ExpectedValue::Integer(6),
+                "-",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 * 5;",
+                ExpectedValue::Integer(6),
+                "*",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 / 5;",
+                ExpectedValue::Integer(6),
+                "/",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 > 5;",
+                ExpectedValue::Integer(6),
+                ">",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 < 5;",
+                ExpectedValue::Integer(6),
+                "<",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 == 5;",
+                ExpectedValue::Integer(6),
+                "==",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 != 5;",
+                ExpectedValue::Integer(6),
+                "!=",
+                ExpectedValue::Integer(5),
+            ),
         ];
 
         for (input, left_value, operator, right_value) in infix_tests {
@@ -504,18 +567,7 @@ mod tests {
                 _ => unreachable!(),
             };
 
-            let infix_expr = match expr_stmt.expression {
-                Expression::Infix(infix_expr) => infix_expr,
-                _ => unreachable!(),
-            };
-
-            test_integer_literal(*infix_expr.left, left_value);
-            assert_eq!(
-                infix_expr.operator, operator,
-                "infix_expr.operator is not '{}'. got='{}'.",
-                operator, infix_expr.operator
-            );
-            test_integer_literal(*infix_expr.right, right_value);
+            test_infix_expression(expr_stmt.expression, left_value, operator, right_value)
         }
     }
 
@@ -537,6 +589,10 @@ mod tests {
                 "3 + 4 * 5 == 3 * 1 + 4 * 5",
                 "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
             ),
+            ("true;", "true"),
+            ("false;", "false"),
+            ("3 > 5 == false", "((3 > 5) == false)"),
+            ("3 < 5 == true", "((3 < 5) == true)"),
         ];
 
         for (input, expected) in tests {
@@ -555,7 +611,7 @@ mod tests {
     }
 
     fn test_identifier(expr: Expression, value: String) {
-        let ident = match expr.expression {
+        let ident = match expr {
             Expression::Ident(ident) => ident,
             _ => unreachable!(),
         };
@@ -574,17 +630,53 @@ mod tests {
         );
     }
 
+    fn test_literal_expression(expr: Expression, expected: ExpectedValue) {
+        match expected {
+            ExpectedValue::Integer(value) => test_integer_literal(expr, value),
+            ExpectedValue::String(value) => test_identifier(expr, value),
+            ExpectedValue::Boolean(value) => test_boolean_literal(expr, value),
+        }
+    }
+
+    fn test_boolean_literal(expr: Expression, value: bool) {
+        let boolean_expr = match expr {
+            Expression::Boolean(boolean_expr) => boolean_expr,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            boolean_expr.value, value,
+            "boolean_expr.value not '{}'. got='{}'",
+            value, boolean_expr.value
+        );
+        let token_literal = boolean_expr.token_literal();
+        // TODO: make sure this works
+        let expected = format!("{}", value);
+        assert_eq!(
+            token_literal, expected,
+            "boolean_expr.token_literal() not '{}', got='{}'",
+            expected, token_literal
+        );
+    }
+
     fn test_infix_expression(
         expr: Expression,
-        left: Expression,
-        operator: String,
-        right: Expression,
+        left: ExpectedValue,
+        operator: &str,
+        right: ExpectedValue,
     ) {
         let infix_expr = match expr {
             Expression::Infix(infix_expr) => infix_expr,
             _ => unreachable!(),
         };
 
-        // TODO: implement the rest
+        test_literal_expression(*infix_expr.left, left);
+        assert_eq!(
+            infix_expr.operator, operator,
+            "infix_expr.operator not '{}'. got='{}'",
+            operator, infix_expr.operator
+        );
+
+        test_literal_expression(*infix_expr.right, right);
     }
 }

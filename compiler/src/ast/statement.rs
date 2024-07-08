@@ -52,8 +52,8 @@ impl LetStatement {
 
 #[derive(Clone)]
 pub struct ReturnStatement {
-    token: Token,
-    return_value: Expression,
+    pub token: Token,
+    pub return_value: Expression,
 }
 
 impl Node for ReturnStatement {

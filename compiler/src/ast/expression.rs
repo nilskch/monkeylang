@@ -6,6 +6,7 @@ use std::fmt::{Display, Formatter, Result};
 pub enum Expression {
     Ident(Identifier),
     Integer(IntegerLiteral),
+    Boolean(BooleanLiteral),
     Prefix(PrefixExpression),
     Infix(InfixExpression),
     Nil,
@@ -18,6 +19,7 @@ impl Display for Expression {
             Expression::Integer(integer) => write!(f, "{}", integer),
             Expression::Prefix(prefix_expr) => write!(f, "{}", prefix_expr),
             Expression::Infix(infix_expr) => write!(f, "{}", infix_expr),
+            Expression::Boolean(bool_expr) => write!(f, "{}", bool_expr),
             Expression::Nil => unreachable!(),
         }
     }
@@ -30,6 +32,7 @@ impl Node for Expression {
             Expression::Integer(integer) => integer.token_literal(),
             Expression::Prefix(prefix_expr) => prefix_expr.token_literal(),
             Expression::Infix(infix_expr) => infix_expr.token_literal(),
+            Expression::Boolean(bool_expr) => bool_expr.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -145,5 +148,29 @@ impl InfixExpression {
             operator,
             right: Box::new(right),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct BooleanLiteral {
+    pub token: Token,
+    pub value: bool,
+}
+
+impl Node for BooleanLiteral {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Display for BooleanLiteral {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.token.literal)
+    }
+}
+
+impl BooleanLiteral {
+    pub fn new(token: Token, value: bool) -> BooleanLiteral {
+        BooleanLiteral { token, value }
     }
 }
