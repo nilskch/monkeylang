@@ -437,9 +437,14 @@ mod tests {
 
     #[test]
     fn test_parsing_prefix_expressions() {
-        let prefix_tests = [("!5;", "!", 5), ("-15;", "-", 15)];
+        let prefix_tests = [
+            ("!5;", "!", ExpectedValue::Integer(5)),
+            ("-15;", "-", ExpectedValue::Integer(15)),
+            ("!true;", "!", ExpectedValue::Boolean(true)),
+            ("!false;", "!", ExpectedValue::Boolean(false)),
+        ];
 
-        for (input, operator, integer_value) in prefix_tests {
+        for (input, operator, value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
             let program = parser.parse_program();
@@ -469,12 +474,11 @@ mod tests {
                 operator, prefix_expr.operator
             );
 
-            test_integer_literal(*prefix_expr.right, integer_value);
+            test_literal_expression(*prefix_expr.right, value);
         }
     }
 
     fn test_integer_literal(expr: Expression, value: i64) {
-        println!("FOOBAR: {}", expr);
         let integer = match expr {
             Expression::Integer(integer) => integer,
             _ => unreachable!(),
@@ -545,6 +549,24 @@ mod tests {
                 ExpectedValue::Integer(6),
                 "!=",
                 ExpectedValue::Integer(5),
+            ),
+            (
+                "true == true",
+                ExpectedValue::Boolean(true),
+                "==",
+                ExpectedValue::Boolean(true),
+            ),
+            (
+                "true != false",
+                ExpectedValue::Boolean(true),
+                "!=",
+                ExpectedValue::Boolean(false),
+            ),
+            (
+                "false == false",
+                ExpectedValue::Boolean(false),
+                "==",
+                ExpectedValue::Boolean(false),
             ),
         ];
 
