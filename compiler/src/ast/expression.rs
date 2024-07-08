@@ -1,4 +1,5 @@
 use super::Node;
+use crate::ast::statement::BlockStatement;
 use crate::token::Token;
 use std::fmt::{Display, Formatter, Result};
 
@@ -9,6 +10,7 @@ pub enum Expression {
     Boolean(BooleanLiteral),
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+    IfElse(IfExpression),
     Nil,
 }
 
@@ -20,6 +22,7 @@ impl Display for Expression {
             Expression::Prefix(prefix_expr) => write!(f, "{}", prefix_expr),
             Expression::Infix(infix_expr) => write!(f, "{}", infix_expr),
             Expression::Boolean(bool_expr) => write!(f, "{}", bool_expr),
+            Expression::IfElse(if_expr) => write!(f, "{}", if_expr),
             Expression::Nil => unreachable!(),
         }
     }
@@ -33,6 +36,7 @@ impl Node for Expression {
             Expression::Prefix(prefix_expr) => prefix_expr.token_literal(),
             Expression::Infix(infix_expr) => infix_expr.token_literal(),
             Expression::Boolean(bool_expr) => bool_expr.token_literal(),
+            Expression::IfElse(if_expr) => if_expr.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -172,5 +176,45 @@ impl Display for BooleanLiteral {
 impl BooleanLiteral {
     pub fn new(token: Token, value: bool) -> BooleanLiteral {
         BooleanLiteral { token, value }
+    }
+}
+
+#[derive(Clone)]
+pub struct IfExpression {
+    pub token: Token,
+    pub condition: Box<Expression>,
+    pub consequence: BlockStatement,
+    pub alternative: Option<BlockStatement>,
+}
+
+impl Node for IfExpression {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Display for IfExpression {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "if {} {}", self.condition, self.consequence)?;
+        if let Some(alternative) = &self.alternative {
+            write!(f, " else {}", alternative)?;
+        }
+        Ok(())
+    }
+}
+
+impl IfExpression {
+    pub fn new(
+        token: Token,
+        condition: Expression,
+        consequence: BlockStatement,
+        alternative: Option<BlockStatement>,
+    ) -> IfExpression {
+        IfExpression {
+            token,
+            condition: Box::new(condition),
+            consequence,
+            alternative,
+        }
     }
 }

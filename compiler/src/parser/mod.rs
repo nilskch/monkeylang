@@ -4,10 +4,13 @@ use precedence::PRECEDENCES;
 
 use self::precedence::Precedence;
 use crate::ast::expression::{
-    BooleanLiteral, Expression, Identifier, InfixExpression, IntegerLiteral, PrefixExpression,
+    BooleanLiteral, Expression, Identifier, IfExpression, InfixExpression, IntegerLiteral,
+    PrefixExpression,
 };
 use crate::ast::program::Program;
-use crate::ast::statement::{ExpressionStatement, LetStatement, ReturnStatement, Statement};
+use crate::ast::statement::{
+    BlockStatement, ExpressionStatement, LetStatement, ReturnStatement, Statement,
+};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
@@ -79,6 +82,7 @@ impl Parser {
             TokenType::Bang | TokenType::Minus => self.parse_prefix_expression(),
             TokenType::True | TokenType::False => self.parse_boolean_expression(),
             TokenType::LParen => self.parse_grouped_expression(),
+            TokenType::If => self.parse_if_expression(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
@@ -243,6 +247,64 @@ impl Parser {
         } else {
             expr
         }
+    }
+
+    fn parse_if_expression(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+
+        if !self.expect_peek(TokenType::LParen) {
+            return Expression::Nil;
+        }
+
+        self.next_token();
+
+        let condition = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_peek(TokenType::RParen) {
+            return Expression::Nil;
+        }
+
+        if !self.expect_peek(TokenType::LBrace) {
+            return Expression::Nil;
+        }
+
+        let consequence = self.parse_block_statement();
+
+        let alternative = if self.peek_token_is(TokenType::Else) {
+            self.next_token();
+
+            if !self.expect_peek(TokenType::LBrace) {
+                None
+            } else {
+                Some(self.parse_block_statement())
+            }
+        } else {
+            None
+        };
+
+        Expression::IfElse(IfExpression::new(
+            token,
+            condition,
+            consequence,
+            alternative,
+        ))
+    }
+
+    fn parse_block_statement(&mut self) -> BlockStatement {
+        let token = self.cur_token.clone();
+        let mut statements = vec![];
+
+        self.next_token();
+
+        while !self.cur_token_is(TokenType::RBrace) && !self.cur_token_is(TokenType::Eof) {
+            if let Ok(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            }
+
+            self.next_token();
+        }
+
+        BlockStatement::new(token, statements)
     }
 }
 
@@ -688,8 +750,8 @@ mod tests {
             "boolean_expr.value not '{}'. got='{}'",
             value, boolean_expr.value
         );
+
         let token_literal = boolean_expr.token_literal();
-        // TODO: make sure this works
         let expected = format!("{}", value);
         assert_eq!(
             token_literal, expected,
@@ -717,5 +779,127 @@ mod tests {
         );
 
         test_literal_expression(*infix_expr.right, right);
+    }
+
+    #[test]
+    fn test_if_expression() {
+        let input = "if (x < y) { x }";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let num_stmts = program.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "program.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = program.statements[0].clone();
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let if_expr = match expr_stmt.expression {
+            Expression::IfElse(if_expr) => if_expr,
+            _ => unreachable!(),
+        };
+
+        test_infix_expression(
+            *if_expr.condition,
+            ExpectedValue::String("x".to_string()),
+            "<",
+            ExpectedValue::String("y".to_string()),
+        );
+
+        let num_stmts = if_expr.consequence.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "if_expr.consequence.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = if_expr.consequence.statements[0].clone();
+        let consequence = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        test_identifier(consequence.expression, "x".to_string());
+
+        if let Some(_) = if_expr.alternative {
+            unreachable!();
+        }
+    }
+
+    #[test]
+    fn test_if_else_expression() {
+        let input = "if (x < y) { x } else { y }";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let num_stmts = program.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "program.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = program.statements[0].clone();
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let if_expr = match expr_stmt.expression {
+            Expression::IfElse(if_expr) => if_expr,
+            _ => unreachable!(),
+        };
+
+        test_infix_expression(
+            *if_expr.condition,
+            ExpectedValue::String("x".to_string()),
+            "<",
+            ExpectedValue::String("y".to_string()),
+        );
+
+        let num_stmts = if_expr.consequence.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "if_expr.consequence.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = if_expr.consequence.statements[0].clone();
+        let consequence = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        test_identifier(consequence.expression, "x".to_string());
+
+        let alternative = match if_expr.alternative {
+            Some(alternative) => alternative,
+            None => unreachable!(),
+        };
+
+        let num_stmts = alternative.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "alternative.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = alternative.statements[0].clone();
+        let alternative = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        test_identifier(alternative.expression, "y".to_string());
     }
 }
