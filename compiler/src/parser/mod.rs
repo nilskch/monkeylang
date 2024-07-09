@@ -162,12 +162,15 @@ impl Parser {
             return Statement::Nil;
         }
 
-        // skip expression until we encouter semicolon
-        while !self.cur_token_is(TokenType::Semicolon) {
+        self.next_token();
+
+        let value = self.parse_expression(Precedence::Lowest);
+
+        if !self.cur_token_is(TokenType::Semicolon) {
             self.next_token()
         }
 
-        Statement::Let(LetStatement::new(token, name, Expression::Nil))
+        Statement::Let(LetStatement::new(token, name, value))
     }
 
     fn cur_token_is(&self, token_type: TokenType) -> bool {
@@ -407,28 +410,37 @@ mod tests {
 
     #[test]
     fn test_let_statements() {
-        let input = "
-            let x = 5;
-            let y = 10;
-            let foobar = 838383;
-        ";
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-        check_parser_errors(parser);
+        let tests = [
+            ("let x = 5;", "x", ExpectedValue::Integer(5)),
+            ("let y = true;", "y", ExpectedValue::Boolean(true)),
+            (
+                "let foobar = y;",
+                "foobar",
+                ExpectedValue::String(String::from("y")),
+            ),
+        ];
+        for (input, identifier, expected) in tests {
+            let lexer = Lexer::new(input.to_string());
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            check_parser_errors(parser);
 
-        let num_stmt = program.statements.len();
-        assert_eq!(
-            num_stmt, 3,
-            "program.statements.len() wrong. expected={}, got={}",
-            3, num_stmt
-        );
+            let num_stmt = program.statements.len();
+            assert_eq!(
+                num_stmt, 1,
+                "program.statements.len() wrong. expected={}, got={}",
+                1, num_stmt
+            );
 
-        let tests = ["x", "y", "foobar"];
+            let stmt = &program.statements[0];
+            test_let_statement(stmt, identifier);
 
-        for (i, &expected) in tests.iter().enumerate() {
-            let stmt = &program.statements[i];
-            test_let_statement(stmt, expected);
+            let let_stmt = match stmt {
+                Statement::Let(let_stmt) => let_stmt,
+                _ => unreachable!(),
+            };
+
+            test_literal_expression(&let_stmt.value, expected)
         }
     }
 
@@ -445,7 +457,7 @@ mod tests {
             _ => unreachable!(),
         };
 
-        let stmt_name = let_stmt.name.value.as_str();
+        let stmt_name = &let_stmt.name.value;
         assert_eq!(
             stmt_name, name,
             "let_stmt.name.value not '{}'. got='{}'",
