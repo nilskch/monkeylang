@@ -4,8 +4,8 @@ use precedence::PRECEDENCES;
 
 use self::precedence::Precedence;
 use crate::ast::expression::{
-    BooleanLiteral, Expression, Identifier, IfExpression, InfixExpression, IntegerLiteral,
-    PrefixExpression,
+    BooleanLiteral, Expression, FunctionLiteral, Identifier, IfExpression, InfixExpression,
+    IntegerLiteral, PrefixExpression,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -83,6 +83,7 @@ impl Parser {
             TokenType::True | TokenType::False => self.parse_boolean_expression(),
             TokenType::LParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
+            TokenType::Fucntion => self.parse_function_literal(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
@@ -305,6 +306,58 @@ impl Parser {
         }
 
         BlockStatement::new(token, statements)
+    }
+
+    fn parse_function_literal(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+
+        if !self.expect_peek(TokenType::LParen) {
+            return Expression::Nil;
+        }
+
+        let parameters = self.parse_function_parameters();
+
+        if !self.expect_peek(TokenType::LBrace) {
+            return Expression::Nil;
+        }
+
+        let body = self.parse_block_statement();
+
+        Expression::Function(FunctionLiteral::new(token, parameters, body))
+    }
+
+    fn parse_function_parameters(&mut self) -> Vec<Expression> {
+        let mut identifiers = vec![];
+
+        if self.peek_token_is(TokenType::RParen) {
+            self.next_token();
+            return identifiers;
+        }
+
+        self.next_token();
+
+        let ident = Expression::Ident(Identifier::new(
+            self.cur_token.clone(),
+            self.cur_token.literal.clone(),
+        ));
+        identifiers.push(ident);
+
+        while self.peek_token_is(TokenType::Comma) {
+            self.next_token();
+            self.next_token();
+
+            let ident = Expression::Ident(Identifier::new(
+                self.cur_token.clone(),
+                self.cur_token.literal.clone(),
+            ));
+            identifiers.push(ident);
+        }
+
+        if !self.expect_peek(TokenType::RParen) {
+            return vec![];
+        }
+
+        identifiers
     }
 }
 
@@ -901,5 +954,68 @@ mod tests {
         };
 
         test_identifier(alternative.expression, "y".to_string());
+    }
+
+    #[test]
+    fn test_parsing_function_literal() {
+        let input = "fn(x, y) {x + y;}";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let num_stmts = program.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "program.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = program.statements[0].clone();
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let func_literal = match expr_stmt.expression {
+            Expression::Function(func_literal) => func_literal,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            func_literal.parameters.len(),
+            2,
+            "func_literal.parameters.len() not '2'. got='{}'",
+            func_literal.parameters.len()
+        );
+
+        test_literal_expression(
+            func_literal.parameters[0].clone(),
+            ExpectedValue::String("x".to_string()),
+        );
+        test_literal_expression(
+            func_literal.parameters[1].clone(),
+            ExpectedValue::String("y".to_string()),
+        );
+
+        assert_eq!(
+            func_literal.body.statements.len(),
+            1,
+            "func_literal.body.statements.len() not '1'. got='{}'",
+            func_literal.body.statements.len()
+        );
+
+        let stmt = func_literal.body.statements[0].clone();
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        test_infix_expression(
+            expr_stmt.expression,
+            ExpectedValue::String("x".to_string()),
+            "+",
+            ExpectedValue::String("y".to_string()),
+        )
     }
 }

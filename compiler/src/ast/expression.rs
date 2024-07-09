@@ -11,6 +11,7 @@ pub enum Expression {
     Prefix(PrefixExpression),
     Infix(InfixExpression),
     IfElse(IfExpression),
+    Function(FunctionLiteral),
     Nil,
 }
 
@@ -23,6 +24,7 @@ impl Display for Expression {
             Expression::Infix(infix_expr) => write!(f, "{}", infix_expr),
             Expression::Boolean(bool_expr) => write!(f, "{}", bool_expr),
             Expression::IfElse(if_expr) => write!(f, "{}", if_expr),
+            Expression::Function(func) => write!(f, "{}", func),
             Expression::Nil => unreachable!(),
         }
     }
@@ -37,6 +39,7 @@ impl Node for Expression {
             Expression::Infix(infix_expr) => infix_expr.token_literal(),
             Expression::Boolean(bool_expr) => bool_expr.token_literal(),
             Expression::IfElse(if_expr) => if_expr.token_literal(),
+            Expression::Function(func) => func.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -215,6 +218,42 @@ impl IfExpression {
             condition: Box::new(condition),
             consequence,
             alternative,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct FunctionLiteral {
+    pub token: Token,
+    pub parameters: Vec<Expression>,
+    pub body: BlockStatement,
+}
+
+impl Node for FunctionLiteral {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Display for FunctionLiteral {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let params: Vec<String> = self
+            .parameters
+            .clone()
+            .into_iter()
+            .map(|param| format!("{}", param))
+            .collect();
+        let params = params.join(", ");
+        write!(f, "{}({}) {}", self.token_literal(), params, self.body)
+    }
+}
+
+impl FunctionLiteral {
+    pub fn new(token: Token, parameters: Vec<Expression>, body: BlockStatement) -> FunctionLiteral {
+        FunctionLiteral {
+            token,
+            parameters,
+            body,
         }
     }
 }
