@@ -25,7 +25,7 @@ impl Display for Statement {
 }
 
 impl Node for Statement {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         match self {
             Statement::Let(stmt) => stmt.token_literal(),
             _ => unreachable!(),
@@ -41,8 +41,8 @@ pub struct LetStatement {
 }
 
 impl Node for LetStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -65,8 +65,8 @@ pub struct ReturnStatement {
 }
 
 impl Node for ReturnStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -92,8 +92,8 @@ pub struct ExpressionStatement {
 }
 
 impl Node for ExpressionStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -116,8 +116,8 @@ pub struct BlockStatement {
 }
 
 impl Node for BlockStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 

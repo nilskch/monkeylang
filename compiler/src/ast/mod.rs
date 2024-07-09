@@ -3,7 +3,7 @@ pub mod program;
 pub mod statement;
 
 pub trait Node {
-    fn token_literal(&self) -> String;
+    fn token_literal(&self) -> &str;
 }
 
 #[cfg(test)]

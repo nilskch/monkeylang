@@ -480,7 +480,7 @@ mod tests {
                 token_literal,
             );
 
-            test_literal_expression(return_stmt.return_value, expected)
+            test_literal_expression(&return_stmt.return_value, expected)
         }
     }
 
@@ -601,11 +601,11 @@ mod tests {
                 operator, prefix_expr.operator
             );
 
-            test_literal_expression(*prefix_expr.right, value);
+            test_literal_expression(&*prefix_expr.right, value);
         }
     }
 
-    fn test_integer_literal(expr: Expression, value: i64) {
+    fn test_integer_literal(expr: &Expression, value: i64) {
         let integer = match expr {
             Expression::Integer(integer) => integer,
             _ => unreachable!(),
@@ -710,13 +710,13 @@ mod tests {
                 1, num_stmts
             );
 
-            let stmt = program.statements[0].clone();
+            let stmt = &program.statements[0];
             let expr_stmt = match stmt {
                 Statement::Expr(stmt) => stmt,
                 _ => unreachable!(),
             };
 
-            test_infix_expression(expr_stmt.expression, left_value, operator, right_value)
+            test_infix_expression(&expr_stmt.expression, left_value, operator, right_value)
         }
     }
 
@@ -764,7 +764,7 @@ mod tests {
         }
     }
 
-    fn test_identifier(expr: Expression, value: String) {
+    fn test_identifier(expr: &Expression, value: String) {
         let ident = match expr {
             Expression::Ident(ident) => ident,
             _ => unreachable!(),
@@ -784,7 +784,7 @@ mod tests {
         );
     }
 
-    fn test_literal_expression(expr: Expression, expected: ExpectedValue) {
+    fn test_literal_expression(expr: &Expression, expected: ExpectedValue) {
         match expected {
             ExpectedValue::Integer(value) => test_integer_literal(expr, value),
             ExpectedValue::String(value) => test_identifier(expr, value),
@@ -792,7 +792,7 @@ mod tests {
         }
     }
 
-    fn test_boolean_literal(expr: Expression, value: bool) {
+    fn test_boolean_literal(expr: &Expression, value: bool) {
         let boolean_expr = match expr {
             Expression::Boolean(boolean_expr) => boolean_expr,
             _ => unreachable!(),
@@ -814,7 +814,7 @@ mod tests {
     }
 
     fn test_infix_expression(
-        expr: Expression,
+        expr: &Expression,
         left: ExpectedValue,
         operator: &str,
         right: ExpectedValue,
@@ -824,14 +824,14 @@ mod tests {
             _ => unreachable!(),
         };
 
-        test_literal_expression(*infix_expr.left, left);
+        test_literal_expression(&*infix_expr.left, left);
         assert_eq!(
             infix_expr.operator, operator,
             "infix_expr.operator not '{}'. got='{}'",
             operator, infix_expr.operator
         );
 
-        test_literal_expression(*infix_expr.right, right);
+        test_literal_expression(&*infix_expr.right, right);
     }
 
     #[test]
@@ -861,7 +861,7 @@ mod tests {
         };
 
         test_infix_expression(
-            *if_expr.condition,
+            &*if_expr.condition,
             ExpectedValue::String("x".to_string()),
             "<",
             ExpectedValue::String("y".to_string()),
@@ -880,7 +880,7 @@ mod tests {
             _ => unreachable!(),
         };
 
-        test_identifier(consequence.expression, "x".to_string());
+        test_identifier(&consequence.expression, "x".to_string());
 
         if let Some(_) = if_expr.alternative {
             unreachable!();
@@ -914,10 +914,10 @@ mod tests {
         };
 
         test_infix_expression(
-            *if_expr.condition,
-            ExpectedValue::String("x".to_string()),
+            &*if_expr.condition,
+            ExpectedValue::String(String::from("x")),
             "<",
-            ExpectedValue::String("y".to_string()),
+            ExpectedValue::String(String::from("y")),
         );
 
         let num_stmts = if_expr.consequence.statements.len();
@@ -927,13 +927,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = if_expr.consequence.statements[0].clone();
+        let stmt = &if_expr.consequence.statements[0];
         let consequence = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        test_identifier(consequence.expression, "x".to_string());
+        test_identifier(&consequence.expression, "x".to_string());
 
         let alternative = match if_expr.alternative {
             Some(alternative) => alternative,
@@ -947,13 +947,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = alternative.statements[0].clone();
+        let stmt = &alternative.statements[0];
         let alternative = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        test_identifier(alternative.expression, "y".to_string());
+        test_identifier(&alternative.expression, String::from("y"));
     }
 
     #[test]
@@ -990,11 +990,11 @@ mod tests {
         );
 
         test_literal_expression(
-            func_literal.parameters[0].clone(),
+            &func_literal.parameters[0],
             ExpectedValue::String("x".to_string()),
         );
         test_literal_expression(
-            func_literal.parameters[1].clone(),
+            &func_literal.parameters[1],
             ExpectedValue::String("y".to_string()),
         );
 
@@ -1005,17 +1005,20 @@ mod tests {
             func_literal.body.statements.len()
         );
 
-        let stmt = func_literal.body.statements[0].clone();
+        let stmt = &func_literal.body.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
         test_infix_expression(
-            expr_stmt.expression,
-            ExpectedValue::String("x".to_string()),
+            &expr_stmt.expression,
+            ExpectedValue::String(String::from("x")),
             "+",
-            ExpectedValue::String("y".to_string()),
+            ExpectedValue::String(String::from("y")),
         )
     }
+
+    #[test]
+    fn test_call_expression_parsing() {}
 }

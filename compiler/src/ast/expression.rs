@@ -12,12 +12,13 @@ pub enum Expression {
     Infix(InfixExpression),
     IfElse(IfExpression),
     Function(FunctionLiteral),
+    Call(CallExpression),
     Nil,
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        match &self {
+        match self {
             Expression::Ident(ident) => write!(f, "{}", ident),
             Expression::Integer(integer) => write!(f, "{}", integer),
             Expression::Prefix(prefix_expr) => write!(f, "{}", prefix_expr),
@@ -25,13 +26,14 @@ impl Display for Expression {
             Expression::Boolean(bool_expr) => write!(f, "{}", bool_expr),
             Expression::IfElse(if_expr) => write!(f, "{}", if_expr),
             Expression::Function(func) => write!(f, "{}", func),
+            Expression::Call(call_expr) => write!(f, "{}", call_expr),
             Expression::Nil => unreachable!(),
         }
     }
 }
 
 impl Node for Expression {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         match self {
             Expression::Ident(ident) => ident.token_literal(),
             Expression::Integer(integer) => integer.token_literal(),
@@ -40,6 +42,7 @@ impl Node for Expression {
             Expression::Boolean(bool_expr) => bool_expr.token_literal(),
             Expression::IfElse(if_expr) => if_expr.token_literal(),
             Expression::Function(func) => func.token_literal(),
+            Expression::Call(call_expr) => call_expr.token_literal(),
             Expression::Nil => unreachable!(),
         }
     }
@@ -52,8 +55,8 @@ pub struct Identifier {
 }
 
 impl Node for Identifier {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -76,8 +79,8 @@ pub struct IntegerLiteral {
 }
 
 impl Node for IntegerLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -101,8 +104,8 @@ pub struct PrefixExpression {
 }
 
 impl Node for PrefixExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -131,8 +134,8 @@ pub struct InfixExpression {
 }
 
 impl Node for InfixExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -165,8 +168,8 @@ pub struct BooleanLiteral {
 }
 
 impl Node for BooleanLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -191,8 +194,8 @@ pub struct IfExpression {
 }
 
 impl Node for IfExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -230,8 +233,8 @@ pub struct FunctionLiteral {
 }
 
 impl Node for FunctionLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
+    fn token_literal(&self) -> &str {
+        &self.token.literal
     }
 }
 
@@ -254,6 +257,42 @@ impl FunctionLiteral {
             token,
             parameters,
             body,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct CallExpression {
+    pub token: Token,
+    pub function: Box<Expression>, // Identifier or FunctionLiteral
+    pub arguments: Vec<Expression>,
+}
+
+impl Node for CallExpression {
+    fn token_literal(&self) -> &str {
+        &self.token.literal
+    }
+}
+
+impl Display for CallExpression {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let arguments: Vec<String> = self
+            .arguments
+            .clone()
+            .into_iter()
+            .map(|param| format!("{}", param))
+            .collect();
+        let arguments = arguments.join(", ");
+        write!(f, "{}({})", self.function, arguments)
+    }
+}
+
+impl CallExpression {
+    pub fn new(token: Token, function: Expression, arguments: Vec<Expression>) -> CallExpression {
+        CallExpression {
+            token,
+            function: Box::new(function),
+            arguments,
         }
     }
 }

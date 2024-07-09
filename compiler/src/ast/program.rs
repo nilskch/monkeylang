@@ -8,11 +8,12 @@ pub struct Program {
 }
 
 impl Node for Program {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         if self.statements.is_empty() {
-            return String::from("");
+            ""
+        } else {
+            self.statements[0].token_literal()
         }
-        self.statements[0].token_literal()
     }
 }
 
