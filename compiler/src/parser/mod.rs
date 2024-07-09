@@ -191,10 +191,6 @@ impl Parser {
         }
     }
 
-    pub fn errors(&self) -> &Vec<String> {
-        &self.errors
-    }
-
     fn peek_error(&mut self, token_type: &TokenType) {
         let msg = format!(
             "expected next token to be '{}', but got '{}' instead",
@@ -473,15 +469,14 @@ mod tests {
     }
 
     fn check_parser_errors(parser: Parser) {
-        let errors = parser.errors();
-        let num_errors = errors.len();
+        let num_errors = parser.errors.len();
 
         if num_errors == 0 {
             return;
         }
 
         println!("parser has {} errors:", num_errors);
-        for msg in errors {
+        for msg in parser.errors {
             println!("parser error: {}", msg)
         }
 

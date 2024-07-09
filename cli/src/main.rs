@@ -12,4 +12,7 @@ fn main() {
                      displaying the help information from --help or -h",
         )
         .get_matches();
+
+    // start the cli
+    compiler::repl::start()
 }

@@ -17,6 +17,19 @@ pub fn start() {
 
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let _program = parser.parse_program();
+        let program = parser.parse_program();
+
+        if parser.errors.len() != 0 {
+            print_parser_errors(parser.errors);
+            continue;
+        }
+
+        println!("{}", program);
+    }
+}
+
+fn print_parser_errors(errors: Vec<String>) {
+    for error in errors {
+        println!("{}", error);
     }
 }
