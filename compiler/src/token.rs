@@ -32,7 +32,7 @@ pub enum TokenType {
     RBrace,
 
     // Keywords
-    Fucntion,
+    Function,
     Let,
     True,
     False,
@@ -74,7 +74,7 @@ impl Display for TokenType {
             TokenType::RBrace => write!(f, "RBrace"),
 
             // Keywords
-            TokenType::Fucntion => write!(f, "Fucntion"),
+            TokenType::Function => write!(f, "Function"),
             TokenType::Let => write!(f, "Let"),
             TokenType::True => write!(f, "True"),
             TokenType::False => write!(f, "False"),
@@ -102,7 +102,7 @@ impl Token {
 
 pub fn lookup_ident(ident: &str) -> TokenType {
     match ident {
-        "fn" => TokenType::Fucntion,
+        "fn" => TokenType::Function,
         "let" => TokenType::Let,
         "true" => TokenType::True,
         "false" => TokenType::False,
@@ -121,7 +121,7 @@ mod tests {
     fn test_lookup_ident() {
         // these tests are not in the book but i added the, nevertheless
         let tests = vec![
-            ("fn", TokenType::Fucntion),
+            ("fn", TokenType::Function),
             ("let", TokenType::Let),
             ("true", TokenType::True),
             ("false", TokenType::False),

@@ -10,6 +10,7 @@ pub enum Precedence {
     Sum,         // +
     Product,     // *
     Prefix,      // -X or !X
+    Call,        // myFunction(X)
 }
 
 lazy_static! {
@@ -23,6 +24,7 @@ lazy_static! {
         m.insert(TokenType::Minus, Precedence::Sum);
         m.insert(TokenType::Slash, Precedence::Product);
         m.insert(TokenType::Asterik, Precedence::Product);
+        m.insert(TokenType::LParen, Precedence::Call);
         m
     };
 }

@@ -4,8 +4,8 @@ use precedence::PRECEDENCES;
 
 use self::precedence::Precedence;
 use crate::ast::expression::{
-    BooleanLiteral, Expression, FunctionLiteral, Identifier, IfExpression, InfixExpression,
-    IntegerLiteral, PrefixExpression,
+    BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier, IfExpression,
+    InfixExpression, IntegerLiteral, PrefixExpression,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -83,7 +83,7 @@ impl Parser {
             TokenType::True | TokenType::False => self.parse_boolean_expression(),
             TokenType::LParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
-            TokenType::Fucntion => self.parse_function_literal(),
+            TokenType::Function => self.parse_function_literal(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
@@ -106,6 +106,10 @@ impl Parser {
                 | TokenType::Gt => {
                     self.next_token();
                     self.parse_infix_expression(left_expr)
+                }
+                TokenType::LParen => {
+                    self.next_token();
+                    self.parse_call_expression(left_expr)
                 }
                 _ => return left_expr,
             };
@@ -233,7 +237,9 @@ impl Parser {
         let token = self.cur_token.clone();
         let operator = self.cur_token.literal.clone();
         let prec = self.cur_precedence();
+
         self.next_token();
+
         let right = self.parse_expression(prec);
 
         Expression::Infix(InfixExpression::new(token, left, operator, right))
@@ -359,6 +365,33 @@ impl Parser {
 
         identifiers
     }
+
+    fn parse_call_expression(&mut self, function: Expression) -> Expression {
+        let token = self.cur_token.clone();
+        let arguments = self.parse_call_arguments();
+        Expression::Call(CallExpression::new(token, function, arguments))
+    }
+
+    fn parse_call_arguments(&mut self) -> Vec<Expression> {
+        let mut arguments = vec![];
+        if self.peek_token_is(TokenType::RParen) {
+            self.next_token();
+            return arguments;
+        }
+
+        self.next_token();
+        arguments.push(self.parse_expression(Precedence::Lowest));
+
+        while self.peek_token_is(TokenType::Comma) {
+            self.next_token();
+            self.next_token();
+            arguments.push(self.parse_expression(Precedence::Lowest));
+        }
+
+        self.expect_peek(TokenType::RParen);
+
+        arguments
+    }
 }
 
 #[cfg(test)]
@@ -467,7 +500,7 @@ mod tests {
                 1, num_stmt
             );
 
-            let stmt = program.statements[0].clone();
+            let stmt = &program.statements[0];
             let return_stmt = match stmt {
                 Statement::Return(stmt) => stmt,
                 _ => unreachable!(),
@@ -498,13 +531,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = program.statements[0].clone();
+        let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        let ident = match expr_stmt.expression {
+        let ident = match &expr_stmt.expression {
             Expression::Ident(ident) => ident,
             _ => unreachable!(),
         };
@@ -537,13 +570,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = program.statements[0].clone();
+        let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        let integer = match expr_stmt.expression {
+        let integer = match &expr_stmt.expression {
             Expression::Integer(integer) => integer,
             _ => unreachable!(),
         };
@@ -584,13 +617,13 @@ mod tests {
                 1, num_stmts
             );
 
-            let stmt = program.statements[0].clone();
+            let stmt = &program.statements[0];
             let expr_stmt = match stmt {
                 Statement::Expr(stmt) => stmt,
                 _ => unreachable!(),
             };
 
-            let prefix_expr = match expr_stmt.expression {
+            let prefix_expr = match &expr_stmt.expression {
                 Expression::Prefix(prefix_expr) => prefix_expr,
                 _ => unreachable!(),
             };
@@ -849,13 +882,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = program.statements[0].clone();
+        let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        let if_expr = match expr_stmt.expression {
+        let if_expr = match &expr_stmt.expression {
             Expression::IfElse(if_expr) => if_expr,
             _ => unreachable!(),
         };
@@ -902,13 +935,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = program.statements[0].clone();
+        let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        let if_expr = match expr_stmt.expression {
+        let if_expr = match &expr_stmt.expression {
             Expression::IfElse(if_expr) => if_expr,
             _ => unreachable!(),
         };
@@ -935,7 +968,7 @@ mod tests {
 
         test_identifier(&consequence.expression, "x".to_string());
 
-        let alternative = match if_expr.alternative {
+        let alternative = match &if_expr.alternative {
             Some(alternative) => alternative,
             None => unreachable!(),
         };
@@ -971,13 +1004,13 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = program.statements[0].clone();
+        let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
         };
 
-        let func_literal = match expr_stmt.expression {
+        let func_literal = match &expr_stmt.expression {
             Expression::Function(func_literal) => func_literal,
             _ => unreachable!(),
         };
@@ -1020,5 +1053,51 @@ mod tests {
     }
 
     #[test]
-    fn test_call_expression_parsing() {}
+    fn test_call_expression_parsing() {
+        let input = "add(1, 2 * 3, 4 + 5)";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let num_stmts = program.statements.len();
+        assert_eq!(
+            num_stmts, 1,
+            "program.statements.len() wrong. expected={}, got={}",
+            1, num_stmts
+        );
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let call_expr = match &expr_stmt.expression {
+            Expression::Call(call_expr) => call_expr,
+            _ => unreachable!(),
+        };
+
+        test_identifier(&*call_expr.function, String::from("add"));
+        assert_eq!(
+            call_expr.arguments.len(),
+            3,
+            "call_expr.arguments.len() not '3'. got='{}'",
+            call_expr.arguments.len()
+        );
+
+        test_literal_expression(&call_expr.arguments[0], ExpectedValue::Integer(1));
+        test_infix_expression(
+            &call_expr.arguments[1],
+            ExpectedValue::Integer(2),
+            "*",
+            ExpectedValue::Integer(3),
+        );
+        test_infix_expression(
+            &call_expr.arguments[2],
+            ExpectedValue::Integer(4),
+            "+",
+            ExpectedValue::Integer(5),
+        );
+    }
 }

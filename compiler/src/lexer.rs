@@ -168,7 +168,7 @@ mod tests {
             (TokenType::Let, "let"),
             (TokenType::Ident, "add"),
             (TokenType::Assign, "="),
-            (TokenType::Fucntion, "fn"),
+            (TokenType::Function, "fn"),
             (TokenType::LParen, "("),
             (TokenType::Ident, "x"),
             (TokenType::Comma, ","),
