@@ -8,7 +8,6 @@ pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
     Expr(ExpressionStatement),
-    Block(BlockStatement),
     Nil,
 }
 
@@ -18,7 +17,6 @@ impl Display for Statement {
             Statement::Let(stmt) => write!(f, "{}", stmt),
             Statement::Return(stmt) => write!(f, "{}", stmt),
             Statement::Expr(stmt) => write!(f, "{}", stmt),
-            Statement::Block(stmt) => write!(f, "{}", stmt),
             Statement::Nil => write!(f, "nil"),
         }
     }
