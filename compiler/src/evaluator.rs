@@ -1,24 +1,39 @@
 use crate::ast::expression::{Expression, IfExpression};
-use crate::ast::statement::Statement;
+use crate::ast::program::Program;
+use crate::ast::statement::{BlockStatement, Statement};
 use crate::ast::Node;
-use crate::object::{Object, BOOLEAN_OBJ, INTEGER_OBJ};
+use crate::object::{Object, BOOLEAN_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
 
 pub fn eval(node: Node) -> Object {
     match node {
-        Node::Program(program) => eval_statements(program.statements),
+        Node::Program(program) => eval_program(program),
         Node::Expression(expr) => eval_expression(expr),
         Node::Statement(stmt) => eval_statement(stmt),
     }
 }
 
-fn eval_statements(stmts: Vec<Statement>) -> Object {
+fn eval_program(program: Program) -> Object {
     let mut result = Object::Null;
 
-    for stmt in stmts {
-        result = eval(Node::Statement(stmt));
+    for stmt in program.statements {
+        result = eval_statement(stmt);
 
         if let Object::ReturnValue(value) = result {
             return *value;
+        }
+    }
+
+    result
+}
+
+fn eval_block_statement(block_stmt: BlockStatement) -> Object {
+    let mut result = Object::Null;
+
+    for stmt in block_stmt.statements {
+        result = eval_statement(stmt);
+
+        if result.object_type() == RETURN_VALUE_OBJ {
+            return result;
         }
     }
 
@@ -134,10 +149,10 @@ fn eval_if_expression(if_expr: IfExpression) -> Object {
     let condition = eval_expression(*if_expr.condition);
 
     if is_truthy(condition) {
-        return eval_statements(if_expr.consequence.statements);
+        return eval_block_statement(if_expr.consequence);
     }
     if let Some(alternative) = if_expr.alternative {
-        return eval_statements(alternative.statements);
+        return eval_block_statement(alternative);
     }
 
     Object::Null
@@ -320,6 +335,17 @@ mod tests {
             ("return 10; 9;", 10),
             ("return 2 * 5; 9;;", 10),
             ("9; return 2 * 5; 9;", 10),
+            ("if (10 > 1) { return 10; }", 10),
+            (
+                "if (10 > 1) {
+                    if (10 > 1) {
+                        return 10;
+                    }
+
+                    return 1;
+                }",
+                10,
+            ),
         ];
 
         for (input, expected) in tests {
