@@ -24,14 +24,14 @@ fn eval_statements(stmts: Vec<Statement>) -> Object {
 fn eval_statement(stmt: Statement) -> Object {
     match stmt {
         Statement::Expr(expr_stmt) => eval_expression(expr_stmt.expression),
-        _ => unreachable!(),
+        _ => Object::Null,
     }
 }
 
 fn eval_expression(expr: Expression) -> Object {
     match expr {
         Expression::Integer(integer_literal) => Object::Integer(integer_literal.value),
-        _ => unreachable!(),
+        _ => Object::Null,
     }
 }
 

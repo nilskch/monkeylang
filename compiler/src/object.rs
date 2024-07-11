@@ -17,7 +17,7 @@ impl Display for Object {
 }
 
 impl Object {
-    fn object_type(&self) -> String {
+    pub fn object_type(&self) -> String {
         match self {
             Object::Boolean(_) => String::from("BOOLEAN"),
             Object::Integer(_) => String::from("INTEGER"),
@@ -25,7 +25,7 @@ impl Object {
         }
     }
 
-    fn inspect(&self) -> String {
+    pub fn inspect(&self) -> String {
         match self {
             Object::Boolean(value) => format!("{}", value),
             Object::Integer(value) => format!("{}", value),

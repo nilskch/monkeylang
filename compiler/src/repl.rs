@@ -1,4 +1,7 @@
+use super::ast::Node;
+use super::evaluator::eval;
 use super::lexer::Lexer;
+use super::object::Object;
 use super::parser::Parser;
 use std::io;
 use std::io::Write;
@@ -24,7 +27,11 @@ pub fn start() {
             continue;
         }
 
-        println!("{}", program);
+        let evaluated = eval(Node::Program(program));
+        match evaluated {
+            Object::Null => continue,
+            _ => println!("{}", evaluated.inspect()),
+        }
     }
 }
 
