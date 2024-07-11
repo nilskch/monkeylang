@@ -31,6 +31,7 @@ fn eval_statement(stmt: Statement) -> Object {
 fn eval_expression(expr: Expression) -> Object {
     match expr {
         Expression::Integer(integer_literal) => Object::Integer(integer_literal.value),
+        Expression::Boolean(boolean_litereal) => Object::Boolean(boolean_litereal.value),
         _ => Object::Null,
     }
 }
@@ -68,6 +69,28 @@ mod tests {
             integer_value, expected,
             "object has wrong value. got='{}'. wanted='{}'",
             integer_value, expected
+        );
+    }
+
+    #[test]
+    fn test_boolean_expression() {
+        let tests = [("true", true), ("false", false)];
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            test_boolean_object(evaluated, expected);
+        }
+    }
+
+    fn test_boolean_object(object: Object, expected: bool) {
+        let boolean_value = match object {
+            Object::Boolean(boolean_value) => boolean_value,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            boolean_value, expected,
+            "object has wrong value. got='{}'. wanted='{}'",
+            boolean_value, expected
         );
     }
 }
