@@ -103,7 +103,9 @@ impl Parser {
                 | TokenType::Eq
                 | TokenType::NotEq
                 | TokenType::Lt
-                | TokenType::Gt => {
+                | TokenType::Gt
+                | TokenType::LtEq
+                | TokenType::GtEq => {
                     self.next_token();
                     self.parse_infix_expression(left_expr)
                 }
@@ -240,7 +242,6 @@ impl Parser {
         self.next_token();
 
         let right = self.parse_expression(prec);
-
         Expression::Infix(InfixExpression::new(token, left, operator, right))
     }
 
@@ -707,6 +708,18 @@ mod tests {
                 "6 != 5;",
                 ExpectedValue::Integer(6),
                 "!=",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 <= 5;",
+                ExpectedValue::Integer(6),
+                "<=",
+                ExpectedValue::Integer(5),
+            ),
+            (
+                "6 >= 5;",
+                ExpectedValue::Integer(6),
+                ">=",
                 ExpectedValue::Integer(5),
             ),
             (

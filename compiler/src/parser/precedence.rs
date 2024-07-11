@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub enum Precedence {
     Lowest = 0,
     Equals,      // ==
-    LessGreater, // > or <
+    LessGreater, // > or < or <= or >=
     Sum,         // +
     Product,     // *
     Prefix,      // -X or !X
@@ -20,6 +20,8 @@ lazy_static! {
         m.insert(TokenType::NotEq, Precedence::Equals);
         m.insert(TokenType::Lt, Precedence::LessGreater);
         m.insert(TokenType::Gt, Precedence::LessGreater);
+        m.insert(TokenType::LtEq, Precedence::LessGreater);
+        m.insert(TokenType::GtEq, Precedence::LessGreater);
         m.insert(TokenType::Plus, Precedence::Sum);
         m.insert(TokenType::Minus, Precedence::Sum);
         m.insert(TokenType::Slash, Precedence::Product);

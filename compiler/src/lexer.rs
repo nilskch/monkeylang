@@ -46,8 +46,22 @@ impl Lexer {
             }
             '/' => Token::new(TokenType::Slash, self.ch.into()),
             '*' => Token::new(TokenType::Asterik, self.ch.into()),
-            '<' => Token::new(TokenType::Lt, self.ch.into()),
-            '>' => Token::new(TokenType::Gt, self.ch.into()),
+            '<' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token::new(TokenType::LtEq, "<=".into())
+                } else {
+                    Token::new(TokenType::Lt, self.ch.into())
+                }
+            }
+            '>' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token::new(TokenType::GtEq, ">=".into())
+                } else {
+                    Token::new(TokenType::Gt, self.ch.into())
+                }
+            }
             ';' => Token::new(TokenType::Semicolon, self.ch.into()),
             ',' => Token::new(TokenType::Comma, self.ch.into()),
             '{' => Token::new(TokenType::LBrace, self.ch.into()),
@@ -152,7 +166,9 @@ mod tests {
         }
 
         10 == 10;
-        10 != 9;";
+        10 != 9;
+        10 <= 10;
+        10 >= 10;";
 
         let tests = [
             (TokenType::Let, "let"),
@@ -227,6 +243,14 @@ mod tests {
             (TokenType::Int, "10"),
             (TokenType::NotEq, "!="),
             (TokenType::Int, "9"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int, "10"),
+            (TokenType::LtEq, "<="),
+            (TokenType::Int, "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int, "10"),
+            (TokenType::GtEq, ">="),
+            (TokenType::Int, "10"),
             (TokenType::Semicolon, ";"),
             (TokenType::Eof, ""),
         ];

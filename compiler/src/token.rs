@@ -19,6 +19,8 @@ pub enum TokenType {
 
     Lt,
     Gt,
+    LtEq,
+    GtEq,
 
     Eq,
     NotEq,
@@ -61,6 +63,8 @@ impl Display for TokenType {
 
             TokenType::Lt => write!(f, "Lt"),
             TokenType::Gt => write!(f, "Gt"),
+            TokenType::LtEq => write!(f, "LtEq"),
+            TokenType::GtEq => write!(f, "GtEq"),
 
             TokenType::Eq => write!(f, "Eq"),
             TokenType::NotEq => write!(f, "NotEq"),
