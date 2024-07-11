@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter, Result};
 
 pub enum Object {
@@ -17,6 +18,7 @@ impl Display for Object {
 }
 
 impl Object {
+    #[allow(dead_code)]
     pub fn object_type(&self) -> String {
         match self {
             Object::Boolean(_) => String::from("BOOLEAN"),
@@ -32,4 +34,11 @@ impl Object {
             Object::Null => String::from("null"),
         }
     }
+}
+
+// TODO: use those somehow instead of creating so many new enums
+lazy_static! {
+    pub static ref NULL: Object = Object::Null;
+    pub static ref TRUE: Object = Object::Boolean(true);
+    pub static ref FALSE: Object = Object::Boolean(false);
 }

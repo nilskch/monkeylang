@@ -32,7 +32,26 @@ fn eval_expression(expr: Expression) -> Object {
     match expr {
         Expression::Integer(integer_literal) => Object::Integer(integer_literal.value),
         Expression::Boolean(boolean_litereal) => Object::Boolean(boolean_litereal.value),
+        Expression::Prefix(prefix_expr) => {
+            let right = eval(Node::Expression(*prefix_expr.right));
+            eval_prefix_expression(&prefix_expr.operator, right)
+        }
         _ => Object::Null,
+    }
+}
+
+fn eval_prefix_expression(operator: &str, right: Object) -> Object {
+    match operator {
+        "!" => eval_bang_operator_expression(right),
+        _ => Object::Null,
+    }
+}
+
+fn eval_bang_operator_expression(right: Object) -> Object {
+    match right {
+        Object::Boolean(value) => Object::Boolean(!value),
+        Object::Null => Object::Boolean(true),
+        _ => Object::Boolean(false),
     }
 }
 
@@ -92,5 +111,21 @@ mod tests {
             "object has wrong value. got='{}'. wanted='{}'",
             boolean_value, expected
         );
+    }
+
+    #[test]
+    fn test_bang_operator() {
+        let tests = [
+            ("!true", false),
+            ("!false", true),
+            ("!5", false),
+            ("!!true", true),
+            ("!!false", false),
+            ("!!5", true),
+        ];
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            test_boolean_object(evaluated, expected);
+        }
     }
 }
