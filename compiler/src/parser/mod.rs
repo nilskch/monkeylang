@@ -928,7 +928,7 @@ mod tests {
             1, num_stmts
         );
 
-        let stmt = if_expr.consequence.statements[0].clone();
+        let stmt = &if_expr.consequence.statements[0];
         let consequence = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),

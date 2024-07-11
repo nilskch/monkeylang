@@ -124,7 +124,11 @@ fn eval_integer_infix_expression(operator: &str, left: Object, right: Object) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lexer::Lexer, object::Object, parser::Parser};
+    use crate::{
+        lexer::Lexer,
+        object::{Object, NULL_OBJ},
+        parser::Parser,
+    };
 
     #[test]
     fn test_eval_integer_expression() {
@@ -233,5 +237,49 @@ mod tests {
             let evaluated = test_eval(input);
             test_boolean_object(evaluated, expected);
         }
+    }
+
+    #[test]
+    fn test_if_else_expressions() {
+        let tests = [
+            ("if (true) { 10 }", Object::Integer(10)),
+            ("if (false) { 10 }", Object::Null),
+            ("if (1) { 10 }", Object::Integer(10)),
+            ("if (1 < 2) { 10 }", Object::Integer(10)),
+            ("if (1 > 2) { 10 }", Object::Null),
+            ("if (1 > 2) { 10 } else { 20 }", Object::Integer(20)),
+            ("if (1 < 2) { 10 } else { 20 }", Object::Integer(10)),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            test_object(evaluated, expected);
+        }
+    }
+
+    fn test_object(object: Object, expected: Object) {
+        let object_type = object.object_type();
+        let expected_type = expected.object_type();
+
+        assert_eq!(
+            object_type, expected_type,
+            "object.object_type() not '{}'. got='{}'",
+            expected_type, object_type
+        );
+
+        match expected {
+            Object::Integer(value) => test_integer_object(object, value),
+            Object::Null => test_null_object(object),
+            _ => unreachable!(),
+        }
+    }
+
+    fn test_null_object(object: Object) {
+        let object_type = object.object_type();
+        assert_eq!(
+            object_type, NULL_OBJ,
+            "object.object_type() not '{}'. got='{}'",
+            NULL_OBJ, object_type
+        );
     }
 }
