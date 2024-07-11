@@ -16,6 +16,10 @@ fn eval_statements(stmts: Vec<Statement>) -> Object {
 
     for stmt in stmts {
         result = eval(Node::Statement(stmt));
+
+        if let Object::ReturnValue(value) = result {
+            return *value;
+        }
     }
 
     result
@@ -24,6 +28,10 @@ fn eval_statements(stmts: Vec<Statement>) -> Object {
 fn eval_statement(stmt: Statement) -> Object {
     match stmt {
         Statement::Expr(expr_stmt) => eval_expression(expr_stmt.expression),
+        Statement::Return(return_stmt) => {
+            let value = eval_expression(return_stmt.return_value);
+            Object::ReturnValue(Box::new(value))
+        }
         _ => Object::Null,
     }
 }
@@ -303,5 +311,20 @@ mod tests {
             "object.object_type() not '{}'. got='{}'",
             NULL_OBJ, object_type
         );
+    }
+
+    #[test]
+    fn test_return_statements() {
+        let tests = [
+            ("return 10;", 10),
+            ("return 10; 9;", 10),
+            ("return 2 * 5; 9;;", 10),
+            ("9; return 2 * 5; 9;", 10),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            test_integer_object(evaluated, expected);
+        }
     }
 }

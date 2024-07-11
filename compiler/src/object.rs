@@ -3,11 +3,13 @@ use std::fmt::{Display, Formatter, Result};
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";
+pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
 pub const NULL_OBJ: &str = "NULL";
 
 pub enum Object {
     Integer(i64),
     Boolean(bool),
+    ReturnValue(Box<Object>),
     Null,
 }
 
@@ -16,6 +18,7 @@ impl Display for Object {
         match self {
             Object::Integer(_) => write!(f, "TODO"),
             Object::Boolean(_) => write!(f, "TODO"),
+            Object::ReturnValue(_) => write!(f, "TODO"),
             Object::Null => write!(f, "TODO"),
         }
     }
@@ -26,6 +29,7 @@ impl Object {
         match self {
             Object::Boolean(_) => BOOLEAN_OBJ,
             Object::Integer(_) => INTEGER_OBJ,
+            Object::ReturnValue(_) => RETURN_VALUE_OBJ,
             Object::Null => NULL_OBJ,
         }
     }
@@ -34,6 +38,7 @@ impl Object {
         match self {
             Object::Boolean(value) => format!("{}", value),
             Object::Integer(value) => format!("{}", value),
+            Object::ReturnValue(value) => format!("{}", value),
             Object::Null => String::from("null"),
         }
     }
