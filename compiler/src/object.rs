@@ -1,6 +1,10 @@
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter, Result};
 
+//pub const BOOLEAN_OBJ: &str = "BOOLEAN";
+//pub const INTEGER_OBJ: &str = "INTEGER";
+//pub const NULL_OBJ: &str = "NULL";
+
 pub enum Object {
     Integer(i64),
     Boolean(bool),
@@ -18,14 +22,13 @@ impl Display for Object {
 }
 
 impl Object {
-    #[allow(dead_code)]
-    pub fn object_type(&self) -> String {
-        match self {
-            Object::Boolean(_) => String::from("BOOLEAN"),
-            Object::Integer(_) => String::from("INTEGER"),
-            Object::Null => String::from("NULL"),
-        }
-    }
+    //pub fn object_type(&self) -> &str {
+    //    match self {
+    //        Object::Boolean(_) => BOOLEAN_OBJ,
+    //        Object::Integer(_) => INTEGER_OBJ,
+    //        Object::Null => NULL_OBJ,
+    //    }
+    //}
 
     pub fn inspect(&self) -> String {
         match self {
