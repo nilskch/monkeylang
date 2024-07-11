@@ -1,4 +1,4 @@
-use crate::ast::expression::Expression;
+use crate::ast::expression::{Expression, IfExpression};
 use crate::ast::statement::Statement;
 use crate::ast::Node;
 use crate::object::{Object, BOOLEAN_OBJ, INTEGER_OBJ};
@@ -41,6 +41,7 @@ fn eval_expression(expr: Expression) -> Object {
             let right = eval(Node::Expression(*infix_expr.right));
             eval_infix_expression(&infix_expr.operator, left, right)
         }
+        Expression::IfElse(if_expr) => eval_if_expression(if_expr),
         _ => Object::Null,
     }
 }
@@ -118,6 +119,27 @@ fn eval_integer_infix_expression(operator: &str, left: Object, right: Object) ->
         "==" => Object::Boolean(left == right),
         "!=" => Object::Boolean(left != right),
         _ => Object::Null,
+    }
+}
+
+fn eval_if_expression(if_expr: IfExpression) -> Object {
+    let condition = eval_expression(*if_expr.condition);
+
+    if is_truthy(condition) {
+        return eval_statements(if_expr.consequence.statements);
+    }
+    if let Some(alternative) = if_expr.alternative {
+        return eval_statements(alternative.statements);
+    }
+
+    Object::Null
+}
+
+fn is_truthy(object: Object) -> bool {
+    match object {
+        Object::Null => false,
+        Object::Boolean(val) => val,
+        _ => true,
     }
 }
 
