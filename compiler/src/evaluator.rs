@@ -333,7 +333,7 @@ mod tests {
         let tests = [
             ("return 10;", 10),
             ("return 10; 9;", 10),
-            ("return 2 * 5; 9;;", 10),
+            ("return 2 * 5; 9;", 10),
             ("9; return 2 * 5; 9;", 10),
             ("if (10 > 1) { return 10; }", 10),
             (
@@ -351,6 +351,36 @@ mod tests {
         for (input, expected) in tests {
             let evaluated = test_eval(input);
             test_integer_object(evaluated, expected);
+        }
+    }
+
+    #[test]
+    fn test_error_handling() {
+        let tests = [
+            ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
+            ("5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"),
+            ("-true;", "unknown operator: -BOOLEAN"),
+            ("true + false;", "unknown operator: BOOLEAN + BOOLEAN"),
+            ("5; true + false; 5;", "unknown operator: BOOLEAN + BOOLEAN"),
+            (
+                "if (10 > 1) { true + false }",
+                "unknown operator: BOOLEAN + BOOLEAN",
+            ),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+
+            let error_msg = match evaluated {
+                Object::Error(msg) => msg,
+                _ => unreachable!(),
+            };
+
+            assert_eq!(
+                &error_msg, expected,
+                "wrong error message. got='{}'. expected='{}'",
+                error_msg, expected
+            );
         }
     }
 }
