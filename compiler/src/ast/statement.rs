@@ -1,4 +1,4 @@
-use crate::{ast::Node, token::Token};
+use crate::token::Token;
 use std::fmt::{Display, Formatter, Result};
 
 use super::expression::{Expression, Identifier};
@@ -22,11 +22,13 @@ impl Display for Statement {
     }
 }
 
-impl Node for Statement {
-    fn token_literal(&self) -> &str {
+impl Statement {
+    pub fn token_literal(&self) -> &str {
         match self {
-            Statement::Let(stmt) => stmt.token_literal(),
-            _ => unreachable!(),
+            Statement::Let(stmt) => &stmt.token.literal,
+            Statement::Return(stmt) => &stmt.token.literal,
+            Statement::Expr(stmt) => &stmt.token.literal,
+            Statement::Nil => unreachable!(),
         }
     }
 }
@@ -36,12 +38,6 @@ pub struct LetStatement {
     pub token: Token,      // token.Let
     pub name: Identifier,  // five
     pub value: Expression, // 5
-}
-
-impl Node for LetStatement {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for LetStatement {
@@ -60,12 +56,6 @@ impl LetStatement {
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Expression,
-}
-
-impl Node for ReturnStatement {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for ReturnStatement {
@@ -89,12 +79,6 @@ pub struct ExpressionStatement {
     pub expression: Expression,
 }
 
-impl Node for ExpressionStatement {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
-}
-
 impl Display for ExpressionStatement {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.expression)
@@ -111,12 +95,6 @@ impl ExpressionStatement {
 pub struct BlockStatement {
     pub token: Token,
     pub statements: Vec<Statement>,
-}
-
-impl Node for BlockStatement {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for BlockStatement {

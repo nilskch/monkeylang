@@ -1,5 +1,4 @@
 use super::statement::Statement;
-use super::Node;
 
 use std::fmt::{Display, Formatter, Result};
 
@@ -7,7 +6,8 @@ pub struct Program {
     pub statements: Vec<Statement>,
 }
 
-impl Node for Program {
+impl Program {
+    #[allow(dead_code)]
     fn token_literal(&self) -> &str {
         if self.statements.is_empty() {
             ""

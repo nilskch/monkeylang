@@ -2,8 +2,14 @@ pub mod expression;
 pub mod program;
 pub mod statement;
 
-pub trait Node {
-    fn token_literal(&self) -> &str;
+use crate::ast::expression::Expression;
+use crate::ast::program::Program;
+use crate::ast::statement::Statement;
+
+pub enum Node {
+    Program(Program),
+    Expression(Expression),
+    Statement(Statement),
 }
 
 #[cfg(test)]

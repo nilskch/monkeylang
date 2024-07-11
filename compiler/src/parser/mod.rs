@@ -396,7 +396,6 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::Node;
 
     enum ExpectedValue {
         Integer(i64),
@@ -441,11 +440,11 @@ mod tests {
     }
 
     fn test_let_statement(stmt: &Statement, name: &str) {
+        let token_literal = stmt.token_literal();
         assert_eq!(
-            stmt.token_literal(),
-            "let",
+            token_literal, "let",
             "stmt.token_literal() not 'let'. got={}",
-            stmt.token_literal()
+            token_literal
         );
 
         let let_stmt = match stmt {
@@ -459,13 +458,6 @@ mod tests {
             "let_stmt.name.value not '{}'. got='{}'",
             name, stmt_name
         );
-
-        let token_literal = let_stmt.name.token_literal();
-        assert_eq!(
-            token_literal, name,
-            "let_stmt.name.token_literal() not '{}'. got='{}'",
-            name, token_literal
-        )
     }
 
     fn check_parser_errors(parser: Parser) {
@@ -508,17 +500,17 @@ mod tests {
             );
 
             let stmt = &program.statements[0];
+            let token_literal = stmt.token_literal();
+            assert_eq!(
+                token_literal, "return",
+                "stmt.token_literal() wrong. wanted='return', got='{}'",
+                token_literal,
+            );
+
             let return_stmt = match stmt {
                 Statement::Return(stmt) => stmt,
                 _ => unreachable!(),
             };
-
-            let token_literal = return_stmt.token_literal();
-            assert_eq!(
-                token_literal, "return",
-                "return_stmt.token_literal() wrong. wanted='return', got='{}'",
-                token_literal,
-            );
 
             test_literal_expression(&return_stmt.return_value, expected)
         }
@@ -539,6 +531,13 @@ mod tests {
         );
 
         let stmt = &program.statements[0];
+        let token_literal = stmt.token_literal();
+        assert_eq!(
+            token_literal, "foobar",
+            "token_literal() not 'foobar'. got='{}'",
+            token_literal
+        );
+
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
@@ -553,13 +552,6 @@ mod tests {
             ident.value, "foobar",
             "ident.value not 'foobar'. got='{}'",
             ident.value
-        );
-
-        let token_literal = ident.token_literal();
-        assert_eq!(
-            token_literal, "foobar",
-            "ident.token_literal() not 'foobar'. got='{}'",
-            token_literal
         );
     }
 
@@ -578,6 +570,13 @@ mod tests {
         );
 
         let stmt = &program.statements[0];
+        let token_literal = stmt.token_literal();
+        assert_eq!(
+            token_literal, "5",
+            "stmt.token_literal() not 'foobar'. got='{}'",
+            token_literal
+        );
+
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
             _ => unreachable!(),
@@ -592,13 +591,6 @@ mod tests {
             integer.value, 5,
             "integer.value not 'foobar'. got='{}'",
             integer.value
-        );
-
-        let token_literal = integer.token_literal();
-        assert_eq!(
-            token_literal, "5",
-            "integer.token_literal() not 'foobar'. got='{}'",
-            token_literal
         );
     }
 
@@ -646,6 +638,14 @@ mod tests {
     }
 
     fn test_integer_literal(expr: &Expression, value: i64) {
+        let token_literal = expr.token_literal();
+        let expected_token_literal = value.to_string();
+        assert_eq!(
+            token_literal, expected_token_literal,
+            "integer.token_literal() not '{}'. got=''{}",
+            expected_token_literal, token_literal
+        );
+
         let integer = match expr {
             Expression::Integer(integer) => integer,
             _ => unreachable!(),
@@ -656,14 +656,6 @@ mod tests {
             "integer.value not {}. got={}",
             value, integer.value
         );
-
-        let token_literal = integer.token_literal();
-        let expected_token_literal = value.to_string();
-        assert_eq!(
-            token_literal, expected_token_literal,
-            "integer.token_literal() not '{}'. got=''{}",
-            expected_token_literal, token_literal
-        )
     }
 
     #[test]
@@ -814,6 +806,13 @@ mod tests {
     }
 
     fn test_identifier(expr: &Expression, value: String) {
+        let token_literal = expr.token_literal();
+        assert_eq!(
+            token_literal, value,
+            "token_literal() not '{}', got='{}'",
+            token_literal, value
+        );
+
         let ident = match expr {
             Expression::Ident(ident) => ident,
             _ => unreachable!(),
@@ -823,13 +822,6 @@ mod tests {
             ident.value, value,
             "ident.value not '{}', got='{}'",
             value, ident.value
-        );
-
-        let token_literal = ident.token_literal();
-        assert_eq!(
-            token_literal, value,
-            "ident.token_literal() not '{}', got='{}'",
-            token_literal, value
         );
     }
 
@@ -842,6 +834,14 @@ mod tests {
     }
 
     fn test_boolean_literal(expr: &Expression, value: bool) {
+        let token_literal = expr.token_literal();
+        let expected = format!("{}", value);
+        assert_eq!(
+            token_literal, expected,
+            "token_literal() not '{}', got='{}'",
+            expected, token_literal
+        );
+
         let boolean_expr = match expr {
             Expression::Boolean(boolean_expr) => boolean_expr,
             _ => unreachable!(),
@@ -851,14 +851,6 @@ mod tests {
             boolean_expr.value, value,
             "boolean_expr.value not '{}'. got='{}'",
             value, boolean_expr.value
-        );
-
-        let token_literal = boolean_expr.token_literal();
-        let expected = format!("{}", value);
-        assert_eq!(
-            token_literal, expected,
-            "boolean_expr.token_literal() not '{}', got='{}'",
-            expected, token_literal
         );
     }
 

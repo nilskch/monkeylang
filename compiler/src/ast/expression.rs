@@ -1,4 +1,3 @@
-use super::Node;
 use crate::ast::statement::BlockStatement;
 use crate::token::Token;
 use std::fmt::{Display, Formatter, Result};
@@ -32,17 +31,18 @@ impl Display for Expression {
     }
 }
 
-impl Node for Expression {
-    fn token_literal(&self) -> &str {
+impl Expression {
+    #[allow(dead_code)]
+    pub fn token_literal(&self) -> &str {
         match self {
-            Expression::Ident(ident) => ident.token_literal(),
-            Expression::Integer(integer) => integer.token_literal(),
-            Expression::Prefix(prefix_expr) => prefix_expr.token_literal(),
-            Expression::Infix(infix_expr) => infix_expr.token_literal(),
-            Expression::Boolean(bool_expr) => bool_expr.token_literal(),
-            Expression::IfElse(if_expr) => if_expr.token_literal(),
-            Expression::Function(func) => func.token_literal(),
-            Expression::Call(call_expr) => call_expr.token_literal(),
+            Expression::Ident(ident) => &ident.token.literal,
+            Expression::Integer(integer) => &integer.token.literal,
+            Expression::Prefix(prefix_expr) => &prefix_expr.token.literal,
+            Expression::Infix(infix_expr) => &infix_expr.token.literal,
+            Expression::Boolean(bool_expr) => &bool_expr.token.literal,
+            Expression::IfElse(if_expr) => &if_expr.token.literal,
+            Expression::Function(func) => &func.token.literal,
+            Expression::Call(call_expr) => &call_expr.token.literal,
             Expression::Nil => unreachable!(),
         }
     }
@@ -52,12 +52,6 @@ impl Node for Expression {
 pub struct Identifier {
     pub token: Token,
     pub value: String,
-}
-
-impl Node for Identifier {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for Identifier {
@@ -78,12 +72,6 @@ pub struct IntegerLiteral {
     pub value: i64,
 }
 
-impl Node for IntegerLiteral {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
-}
-
 impl Display for IntegerLiteral {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.token.literal)
@@ -101,12 +89,6 @@ pub struct PrefixExpression {
     pub token: Token,
     pub operator: String,
     pub right: Box<Expression>,
-}
-
-impl Node for PrefixExpression {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for PrefixExpression {
@@ -131,12 +113,6 @@ pub struct InfixExpression {
     pub left: Box<Expression>,
     pub operator: String,
     pub right: Box<Expression>,
-}
-
-impl Node for InfixExpression {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for InfixExpression {
@@ -167,12 +143,6 @@ pub struct BooleanLiteral {
     pub value: bool,
 }
 
-impl Node for BooleanLiteral {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
-}
-
 impl Display for BooleanLiteral {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.token.literal)
@@ -191,12 +161,6 @@ pub struct IfExpression {
     pub condition: Box<Expression>,
     pub consequence: BlockStatement,
     pub alternative: Option<BlockStatement>,
-}
-
-impl Node for IfExpression {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for IfExpression {
@@ -232,12 +196,6 @@ pub struct FunctionLiteral {
     pub body: BlockStatement,
 }
 
-impl Node for FunctionLiteral {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
-}
-
 impl Display for FunctionLiteral {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let params: Vec<String> = self
@@ -247,7 +205,7 @@ impl Display for FunctionLiteral {
             .map(|param| format!("{}", param))
             .collect();
         let params = params.join(", ");
-        write!(f, "{}({}) {}", self.token_literal(), params, self.body)
+        write!(f, "{}({}) {}", self.token.literal, params, self.body)
     }
 }
 
@@ -266,12 +224,6 @@ pub struct CallExpression {
     pub token: Token,
     pub function: Box<Expression>, // Identifier or FunctionLiteral
     pub arguments: Vec<Expression>,
-}
-
-impl Node for CallExpression {
-    fn token_literal(&self) -> &str {
-        &self.token.literal
-    }
 }
 
 impl Display for CallExpression {
