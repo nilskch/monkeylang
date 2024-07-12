@@ -13,11 +13,15 @@ impl Environment {
         }
     }
 
-    pub fn get(&self, name: &str) -> Option<&Object> {
-        self.store.get(name)
+    pub fn get(&self, name: &str) -> Option<Object> {
+        match self.store.get(name) {
+            Some(object) => Some(object.clone()),
+            None => None,
+        }
     }
 
-    pub fn set(&mut self, name: String, value: Object) {
-        self.store.insert(name, value);
+    pub fn set(&mut self, name: String, value: Object) -> Object {
+        self.store.insert(name, value.clone());
+        value
     }
 }

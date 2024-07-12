@@ -51,9 +51,7 @@ fn eval_statement(stmt: Statement, env: &mut Environment) -> Object {
             if is_error(&value) {
                 return value;
             }
-            // TODO: implement
-            env.set(let_stmt.name.value.to_string(), value);
-            Object::Null
+            env.set(let_stmt.name.value.to_string(), value)
         }
         _ => Object::Null,
     }
