@@ -1,5 +1,6 @@
-use super::ast::Node;
-use super::evaluator::eval;
+use crate::object::environment::Environment;
+
+use super::evaluator::eval_program;
 use super::lexer::Lexer;
 use super::object::Object;
 use super::parser::Parser;
@@ -27,7 +28,8 @@ pub fn start() {
             continue;
         }
 
-        let evaluated = eval(Node::Program(program));
+        let mut env = Environment::new();
+        let evaluated = eval_program(program, &mut env);
         match evaluated {
             Object::Null => continue,
             _ => println!("{}", evaluated.inspect()),

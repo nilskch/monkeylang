@@ -1,3 +1,5 @@
+pub mod environment;
+
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter, Result};
 
@@ -7,6 +9,7 @@ pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
 pub const ERROR_OBJ: &str = "ERROR";
 pub const NULL_OBJ: &str = "NULL";
 
+#[derive(Clone)]
 pub enum Object {
     Integer(i64),
     Boolean(bool),
