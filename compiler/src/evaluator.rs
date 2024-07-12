@@ -2,7 +2,7 @@ use crate::ast::expression::{Expression, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::ast::Node;
-use crate::object::{Object, BOOLEAN_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
+use crate::object::{Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
 
 pub fn eval(node: Node) -> Object {
     match node {
@@ -21,6 +21,9 @@ fn eval_program(program: Program) -> Object {
         if let Object::ReturnValue(value) = result {
             return *value;
         }
+        if let Object::Error(_) = result {
+            return result;
+        }
     }
 
     result
@@ -32,7 +35,8 @@ fn eval_block_statement(block_stmt: BlockStatement) -> Object {
     for stmt in block_stmt.statements {
         result = eval_statement(stmt);
 
-        if result.object_type() == RETURN_VALUE_OBJ {
+        let object_type = result.object_type();
+        if object_type == RETURN_VALUE_OBJ || object_type == ERROR_OBJ {
             return result;
         }
     }
@@ -73,14 +77,18 @@ fn eval_prefix_expression(operator: &str, right: Object) -> Object {
     match operator {
         "!" => eval_bang_operator_expression(right),
         "-" => eval_minus_prefix_operator_expression(right),
-        _ => Object::Null,
+        _ => Object::Error(format!(
+            "unknown operator: {}{}",
+            operator,
+            right.object_type()
+        )),
     }
 }
 
 fn eval_minus_prefix_operator_expression(right: Object) -> Object {
     match right {
         Object::Integer(value) => Object::Integer(-value),
-        _ => Object::Null,
+        _ => Object::Error(format!("unknown operator: -{}", right.object_type())),
     }
 }
 
@@ -94,54 +102,75 @@ fn eval_bang_operator_expression(right: Object) -> Object {
 
 fn eval_infix_expression(operator: &str, left: Object, right: Object) -> Object {
     if left.object_type() != right.object_type() {
-        return Object::Null;
+        return Object::Error(format!(
+            "type mismatch: {} {} {}",
+            left.object_type(),
+            operator,
+            right.object_type()
+        ));
     }
+
     match left.object_type() {
         INTEGER_OBJ => eval_integer_infix_expression(operator, left, right),
         BOOLEAN_OBJ => eval_boolean_infix_expression(operator, left, right),
-        _ => Object::Null,
+        _ => Object::Error(format!(
+            "unknown operator: {} {} {}",
+            left.object_type(),
+            operator,
+            right.object_type()
+        )),
     }
 }
 
 fn eval_boolean_infix_expression(operator: &str, left: Object, right: Object) -> Object {
-    let left = match left {
+    let left_value = match left {
         Object::Boolean(value) => value,
         _ => return Object::Null,
     };
-    let right = match right {
+    let right_value = match right {
         Object::Boolean(value) => value,
         _ => return Object::Null,
     };
 
     match operator {
-        "==" => Object::Boolean(left == right),
-        "!=" => Object::Boolean(left != right),
-        _ => Object::Null,
+        "==" => Object::Boolean(left_value == right_value),
+        "!=" => Object::Boolean(left_value != right_value),
+        _ => Object::Error(format!(
+            "unknown operator: {} {} {}",
+            left.object_type(),
+            operator,
+            right.object_type()
+        )),
     }
 }
 
 fn eval_integer_infix_expression(operator: &str, left: Object, right: Object) -> Object {
-    let left = match left {
+    let left_value = match left {
         Object::Integer(value) => value,
         _ => return Object::Null,
     };
-    let right = match right {
+    let right_value = match right {
         Object::Integer(value) => value,
         _ => return Object::Null,
     };
 
     match operator {
-        "+" => Object::Integer(left + right),
-        "-" => Object::Integer(left - right),
-        "*" => Object::Integer(left * right),
-        "/" => Object::Integer(left / right),
-        "<" => Object::Boolean(left < right),
-        ">" => Object::Boolean(left > right),
-        "<=" => Object::Boolean(left <= right),
-        ">=" => Object::Boolean(left >= right),
-        "==" => Object::Boolean(left == right),
-        "!=" => Object::Boolean(left != right),
-        _ => Object::Null,
+        "+" => Object::Integer(left_value + right_value),
+        "-" => Object::Integer(left_value - right_value),
+        "*" => Object::Integer(left_value * right_value),
+        "/" => Object::Integer(left_value / right_value),
+        "<" => Object::Boolean(left_value < right_value),
+        ">" => Object::Boolean(left_value > right_value),
+        "<=" => Object::Boolean(left_value <= right_value),
+        ">=" => Object::Boolean(left_value >= right_value),
+        "==" => Object::Boolean(left_value == right_value),
+        "!=" => Object::Boolean(left_value != right_value),
+        _ => Object::Error(format!(
+            "unknown operator: {} {} {}",
+            left.object_type(),
+            operator,
+            right.object_type()
+        )),
     }
 }
 
