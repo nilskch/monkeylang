@@ -10,6 +10,8 @@ use std::io::Write;
 const PROMPT: &str = ">> ";
 
 pub fn start() {
+    let mut env = Environment::new();
+
     loop {
         print!("{}", PROMPT);
         io::stdout().flush().unwrap();
@@ -28,7 +30,6 @@ pub fn start() {
             continue;
         }
 
-        let mut env = Environment::new();
         let evaluated = eval_program(program, &mut env);
         match evaluated {
             Object::Null => continue,
