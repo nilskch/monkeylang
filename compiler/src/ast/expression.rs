@@ -192,7 +192,7 @@ impl IfExpression {
 #[derive(Clone)]
 pub struct FunctionLiteral {
     pub token: Token,
-    pub parameters: Vec<Expression>,
+    pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
 }
 
@@ -210,7 +210,7 @@ impl Display for FunctionLiteral {
 }
 
 impl FunctionLiteral {
-    pub fn new(token: Token, parameters: Vec<Expression>, body: BlockStatement) -> FunctionLiteral {
+    pub fn new(token: Token, parameters: Vec<Identifier>, body: BlockStatement) -> FunctionLiteral {
         FunctionLiteral {
             token,
             parameters,

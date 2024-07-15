@@ -1,13 +1,17 @@
 pub mod environment;
 
+use environment::Environment;
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter, Result};
+
+use crate::ast::{expression::Identifier, statement::BlockStatement};
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";
 pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
 pub const ERROR_OBJ: &str = "ERROR";
 pub const NULL_OBJ: &str = "NULL";
+pub const FUNCTION_OBJ: &str = "FUNCTION";
 
 #[derive(Clone)]
 pub enum Object {
@@ -15,6 +19,7 @@ pub enum Object {
     Boolean(bool),
     ReturnValue(Box<Object>),
     Error(String),
+    Function(Function),
     Null,
 }
 
@@ -24,6 +29,7 @@ impl Display for Object {
             Object::Integer(_) => write!(f, "TODO"),
             Object::Boolean(_) => write!(f, "TODO"),
             Object::ReturnValue(_) => write!(f, "TODO"),
+            Object::Function(_) => write!(f, "TODO"),
             Object::Error(_) => write!(f, "TODO"),
             Object::Null => write!(f, "TODO"),
         }
@@ -36,6 +42,7 @@ impl Object {
             Object::Boolean(_) => BOOLEAN_OBJ,
             Object::Integer(_) => INTEGER_OBJ,
             Object::ReturnValue(_) => RETURN_VALUE_OBJ,
+            Object::Function(_) => FUNCTION_OBJ,
             Object::Error(_) => ERROR_OBJ,
             Object::Null => NULL_OBJ,
         }
@@ -46,8 +53,39 @@ impl Object {
             Object::Boolean(value) => format!("{}", value),
             Object::Integer(value) => format!("{}", value),
             Object::ReturnValue(value) => format!("{}", value),
+            Object::Function(function) => {
+                let params: Vec<String> = function
+                    .parameters
+                    .clone()
+                    .into_iter()
+                    .map(|param| format!("{}", param))
+                    .collect();
+                let params = params.join(", ");
+                format!("fn({}) {{\n{}\n}}", params, function.body)
+            }
             Object::Error(msg) => format!("ERROR: {}", msg),
             Object::Null => String::from("null"),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Function {
+    pub parameters: Vec<Identifier>,
+    pub body: BlockStatement,
+    pub env: &'static Environment,
+}
+
+impl Function {
+    pub fn new(
+        parameters: Vec<Identifier>,
+        body: BlockStatement,
+        env: &'static Environment,
+    ) -> Function {
+        Function {
+            parameters,
+            body,
+            env,
         }
     }
 }

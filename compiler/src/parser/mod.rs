@@ -332,7 +332,7 @@ impl Parser {
         Expression::Function(FunctionLiteral::new(token, parameters, body))
     }
 
-    fn parse_function_parameters(&mut self) -> Vec<Expression> {
+    fn parse_function_parameters(&mut self) -> Vec<Identifier> {
         let mut identifiers = vec![];
 
         if self.peek_token_is(TokenType::RParen) {
@@ -342,20 +342,14 @@ impl Parser {
 
         self.next_token();
 
-        let ident = Expression::Ident(Identifier::new(
-            self.cur_token.clone(),
-            self.cur_token.literal.clone(),
-        ));
+        let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
         identifiers.push(ident);
 
         while self.peek_token_is(TokenType::Comma) {
             self.next_token();
             self.next_token();
 
-            let ident = Expression::Ident(Identifier::new(
-                self.cur_token.clone(),
-                self.cur_token.literal.clone(),
-            ));
+            let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
             identifiers.push(ident);
         }
 
@@ -1043,13 +1037,13 @@ mod tests {
             func_literal.parameters.len()
         );
 
-        test_literal_expression(
-            &func_literal.parameters[0],
-            ExpectedValue::String("x".to_string()),
+        test_identifier(
+            &Expression::Ident(func_literal.parameters[0]),
+            String::from("x"),
         );
-        test_literal_expression(
-            &func_literal.parameters[1],
-            ExpectedValue::String("y".to_string()),
+        test_identifier(
+            &Expression::Ident(func_literal.parameters[1]),
+            String::from("y"),
         );
 
         assert_eq!(

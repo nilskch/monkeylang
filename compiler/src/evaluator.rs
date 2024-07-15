@@ -2,7 +2,7 @@ use crate::ast::expression::{Expression, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::Environment;
-use crate::object::{Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
+use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
 
 pub fn eval_program(program: Program, env: &mut Environment) -> Object {
     let mut result = Object::Null;
@@ -82,6 +82,9 @@ fn eval_expression(expr: Expression, env: &mut Environment) -> Object {
         }
         Expression::IfElse(if_expr) => eval_if_expression(if_expr, env),
         Expression::Ident(ident_expr) => eval_identifier(ident_expr, env),
+        Expression::Function(func_expr) => {
+            Object::Function(Function::new(func_expr.parameters, func_expr.body, env))
+        }
         _ => Object::Null,
     }
 }
@@ -458,5 +461,39 @@ mod tests {
             let evaluated = test_eval(input);
             test_integer_object(evaluated, expected);
         }
+    }
+
+    #[test]
+    fn test_function_object() {
+        let input = "fn(x) { x + 1;}";
+
+        let evaluated = test_eval(input);
+        let function = match evaluated {
+            Object::Function(msg) => msg,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            function.parameters.len(),
+            1,
+            "expected 1 parameter. got='{}'",
+            function.parameters.len()
+        );
+
+        let param_name = format!("{}", function.parameters[0]);
+        assert_eq!(
+            param_name,
+            String::from("x"),
+            "wrong parameter. wanted='x'. got='{}'",
+            param_name
+        );
+
+        let body = format!("{}", function.body);
+        let expected_body = String::from("(x + 1)");
+        assert_eq!(
+            body, expected_body,
+            "wrong function body. wanted='{}'. got='{}'",
+            expected_body, body
+        );
     }
 }
