@@ -4,13 +4,16 @@ use super::evaluator::eval_program;
 use super::lexer::Lexer;
 use super::object::Object;
 use super::parser::Parser;
+use std::borrow::Borrow;
+use std::cell::RefCell;
 use std::io;
 use std::io::Write;
+use std::rc::Rc;
 
 const PROMPT: &str = ">> ";
 
 pub fn start() {
-    let mut env = Environment::new();
+    let env = &Rc::from(RefCell::new(Environment::new()));
 
     loop {
         print!("{}", PROMPT);
@@ -30,8 +33,8 @@ pub fn start() {
             continue;
         }
 
-        let evaluated = eval_program(program, &mut env);
-        match evaluated {
+        let evaluated = eval_program(program, env);
+        match evaluated.borrow() {
             Object::Null => continue,
             _ => println!("{}", evaluated.inspect()),
         }

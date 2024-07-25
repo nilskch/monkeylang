@@ -1038,11 +1038,11 @@ mod tests {
         );
 
         test_identifier(
-            &Expression::Ident(func_literal.parameters[0]),
+            &Expression::Ident(func_literal.parameters[0].clone()),
             String::from("x"),
         );
         test_identifier(
-            &Expression::Ident(func_literal.parameters[1]),
+            &Expression::Ident(func_literal.parameters[1].clone()),
             String::from("y"),
         );
 

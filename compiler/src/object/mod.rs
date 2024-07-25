@@ -1,8 +1,9 @@
 pub mod environment;
 
 use environment::Environment;
-use lazy_static::lazy_static;
+use std::cell::RefCell;
 use std::fmt::{Display, Formatter, Result};
+use std::rc::Rc;
 
 use crate::ast::{expression::Identifier, statement::BlockStatement};
 
@@ -17,7 +18,7 @@ pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub enum Object {
     Integer(i64),
     Boolean(bool),
-    ReturnValue(Box<Object>),
+    ReturnValue(Rc<Object>),
     Error(String),
     Function(Function),
     Null,
@@ -73,14 +74,14 @@ impl Object {
 pub struct Function {
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
-    pub env: &'static Environment,
+    pub env: Rc<RefCell<Environment>>,
 }
 
 impl Function {
     pub fn new(
         parameters: Vec<Identifier>,
         body: BlockStatement,
-        env: &'static Environment,
+        env: Rc<RefCell<Environment>>,
     ) -> Function {
         Function {
             parameters,
@@ -88,11 +89,4 @@ impl Function {
             env,
         }
     }
-}
-
-// TODO: use those somehow instead of creating so many new enums
-lazy_static! {
-    pub static ref NULL: Object = Object::Null;
-    pub static ref TRUE: Object = Object::Boolean(true);
-    pub static ref FALSE: Object = Object::Boolean(false);
 }
