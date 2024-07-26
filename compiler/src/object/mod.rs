@@ -1,7 +1,6 @@
 pub mod environment;
 
-use environment::Environment;
-use std::cell::RefCell;
+use environment::Env;
 use std::fmt::{Display, Formatter, Result};
 use std::rc::Rc;
 
@@ -74,15 +73,11 @@ impl Object {
 pub struct Function {
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
-    pub env: Rc<RefCell<Environment>>,
+    pub env: Env,
 }
 
 impl Function {
-    pub fn new(
-        parameters: Vec<Identifier>,
-        body: BlockStatement,
-        env: Rc<RefCell<Environment>>,
-    ) -> Function {
+    pub fn new(parameters: Vec<Identifier>, body: BlockStatement, env: Env) -> Function {
         Function {
             parameters,
             body,

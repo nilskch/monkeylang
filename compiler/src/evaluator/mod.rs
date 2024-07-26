@@ -1,13 +1,12 @@
 use crate::ast::expression::{Expression, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
-use crate::object::environment::Environment;
+use crate::object::environment::Env;
 use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
 use std::borrow::Borrow;
-use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn eval_program(program: Program, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
     let mut result = Rc::from(Object::Null);
 
     for stmt in program.statements {
@@ -24,7 +23,7 @@ pub fn eval_program(program: Program, env: &Rc<RefCell<Environment>>) -> Rc<Obje
     result
 }
 
-fn eval_block_statement(block_stmt: BlockStatement, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+fn eval_block_statement(block_stmt: BlockStatement, env: &Env) -> Rc<Object> {
     let mut result = Rc::from(Object::Null);
 
     for stmt in block_stmt.statements {
@@ -39,7 +38,7 @@ fn eval_block_statement(block_stmt: BlockStatement, env: &Rc<RefCell<Environment
     result
 }
 
-fn eval_statement(stmt: Statement, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+fn eval_statement(stmt: Statement, env: &Env) -> Rc<Object> {
     match stmt {
         Statement::Expr(expr_stmt) => eval_expression(expr_stmt.expression, env),
         Statement::Return(return_stmt) => {
@@ -61,7 +60,7 @@ fn eval_statement(stmt: Statement, env: &Rc<RefCell<Environment>>) -> Rc<Object>
     }
 }
 
-fn eval_expression(expr: Expression, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
     match expr {
         Expression::Integer(integer_literal) => Rc::from(Object::Integer(integer_literal.value)),
         Expression::Boolean(boolean_litereal) => Rc::from(Object::Boolean(boolean_litereal.value)),
@@ -94,7 +93,7 @@ fn eval_expression(expr: Expression, env: &Rc<RefCell<Environment>>) -> Rc<Objec
     }
 }
 
-fn eval_identifier(ident: Identifier, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+fn eval_identifier(ident: Identifier, env: &Env) -> Rc<Object> {
     match env.borrow_mut().get(&ident.value) {
         Some(value) => value,
         None => Rc::from(Object::Error(format!(
@@ -216,7 +215,7 @@ fn eval_integer_infix_expression(
     }
 }
 
-fn eval_if_expression(if_expr: IfExpression, env: &Rc<RefCell<Environment>>) -> Rc<Object> {
+fn eval_if_expression(if_expr: IfExpression, env: &Env) -> Rc<Object> {
     let condition = eval_expression(*if_expr.condition, env);
     if is_error(&condition) {
         return condition;
@@ -250,11 +249,13 @@ fn is_error(object: &Object) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::object::environment::Environment;
     use crate::{
         lexer::Lexer,
         object::{Object, NULL_OBJ},
         parser::Parser,
     };
+    use std::cell::RefCell;
 
     #[test]
     fn test_eval_integer_expression() {

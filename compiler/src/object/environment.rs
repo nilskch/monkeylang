@@ -7,8 +7,10 @@ use super::Object;
 #[derive(Clone)]
 pub struct Environment {
     store: HashMap<String, Rc<Object>>,
-    outer: Option<Rc<RefCell<Environment>>>,
+    outer: Option<Env>,
 }
+
+pub type Env = Rc<RefCell<Environment>>;
 
 impl Environment {
     pub fn new() -> Environment {
@@ -18,7 +20,7 @@ impl Environment {
         }
     }
 
-    pub fn new_enclosed_environment(outer: &Rc<RefCell<Environment>>) -> Self {
+    pub fn new_enclosed_environment(outer: &Env) -> Self {
         Environment {
             store: HashMap::new(),
             outer: Some(Rc::clone(outer)),
