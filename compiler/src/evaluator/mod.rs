@@ -1,8 +1,9 @@
 use crate::ast::expression::{Expression, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
-use crate::object::environment::Env;
+use crate::object::environment::{Env, Environment};
 use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
@@ -51,6 +52,7 @@ fn eval_statement(stmt: Statement, env: &Env) -> Rc<Object> {
             if is_error(&value) {
                 return value;
             }
+
             env.borrow_mut().set(let_stmt.name.value.to_string(), value);
             Rc::from(Object::Null)
         }
@@ -87,8 +89,61 @@ fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
             func_expr.body,
             Rc::clone(env),
         ))),
+        Expression::Call(call_expr) => {
+            let function = eval_expression(*call_expr.function, env);
+            if is_error(&function) {
+                return function;
+            }
+            let args = eval_expressions(call_expr.arguments, env);
+            if args.len() == 1 && is_error(&args[0]) {
+                return Rc::clone(&args[0]);
+            }
+            apply_function(function, args)
+        }
         _ => Rc::from(Object::Null),
     }
+}
+
+fn apply_function(function: Rc<Object>, args: Vec<Rc<Object>>) -> Rc<Object> {
+    let function = match Rc::unwrap_or_clone(function) {
+        Object::Function(function) => function,
+        _ => return Rc::from(Object::Error(format!("not a function"))),
+    };
+
+    let extended_env = extended_function_env(&function, args);
+    let evaluated = eval_block_statement(function.body, &extended_env);
+    unwrap_return_value(evaluated)
+}
+
+fn unwrap_return_value(obj: Rc<Object>) -> Rc<Object> {
+    let obj = Rc::unwrap_or_clone(obj);
+    match obj.clone() {
+        Object::ReturnValue(val) => val,
+        _ => Rc::from(obj),
+    }
+}
+
+fn extended_function_env(function: &Function, args: Vec<Rc<Object>>) -> Env {
+    let mut env = Environment::new_enclosed_environment(&function.env);
+
+    for (param_idx, param) in function.parameters.iter().enumerate() {
+        env.set(param.value.clone(), args[param_idx].clone());
+    }
+
+    Rc::from(RefCell::new(env))
+}
+
+fn eval_expressions(exprs: Vec<Expression>, env: &Env) -> Vec<Rc<Object>> {
+    let mut result = vec![];
+
+    for expr in exprs {
+        let evaluated = eval_expression(expr, env);
+        if is_error(&evaluated) {
+            return vec![evaluated];
+        }
+        result.push(evaluated);
+    }
+    result
 }
 
 fn eval_identifier(ident: Identifier, env: &Env) -> Rc<Object> {
@@ -524,5 +579,21 @@ mod tests {
             "wrong function body. wanted='{}'. got='{}'",
             expected_body, body
         );
+    }
+
+    #[test]
+    fn test_function_application() {
+        let tests = [
+            ("let identity = fn(x) { x; }; identity(5);", 5),
+            ("let identity = fn(x) { return x; }; identity(5);", 5),
+            ("let double = fn(x) { 2 * x; }; double(5);", 10),
+            ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+            ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
+            ("fn(x) { x; }(5)", 5),
+        ];
+
+        for (input, expected) in tests {
+            test_integer_object(test_eval(input), expected);
+        }
     }
 }
