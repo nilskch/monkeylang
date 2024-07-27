@@ -100,6 +100,7 @@ fn eval_expression(expr: Expression, env: &Env) -> Object {
             }
             apply_function(function, args)
         }
+        Expression::String(string_literal) => Object::String(string_literal.value),
         _ => Object::Null,
     }
 }
@@ -525,7 +526,6 @@ mod tests {
     #[test]
     fn test_function_object() {
         let input = "fn(x) { x + 1;}";
-
         let evaluated = test_eval(input);
 
         let function = match evaluated {
@@ -571,5 +571,23 @@ mod tests {
         for (input, expected) in tests {
             test_integer_object(test_eval(input), expected);
         }
+    }
+
+    #[test]
+    fn test_string_literal() {
+        let input = "\"Hello World!\"";
+        let evaluated = test_eval(input);
+
+        let string_literal = match evaluated {
+            Object::String(string_literal) => string_literal,
+            _ => unreachable!(),
+        };
+
+        let expected = "Hello World!";
+        assert_eq!(
+            string_literal, expected,
+            "invalid string. expected='{}'. got='{}'",
+            expected, string_literal
+        );
     }
 }

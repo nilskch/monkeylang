@@ -10,6 +10,7 @@ pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
 pub const ERROR_OBJ: &str = "ERROR";
 pub const NULL_OBJ: &str = "NULL";
 pub const FUNCTION_OBJ: &str = "FUNCTION";
+pub const STRING_OBJ: &str = "STRING";
 
 #[derive(Clone)]
 pub enum Object {
@@ -18,6 +19,7 @@ pub enum Object {
     ReturnValue(Box<Object>),
     Error(String),
     Function(Function),
+    String(String),
     Null,
 }
 
@@ -29,6 +31,7 @@ impl Display for Object {
             Object::ReturnValue(_) => write!(f, "TODO"),
             Object::Function(_) => write!(f, "TODO"),
             Object::Error(_) => write!(f, "TODO"),
+            Object::String(_) => write!(f, "TODO"),
             Object::Null => write!(f, "TODO"),
         }
     }
@@ -42,6 +45,7 @@ impl Object {
             Object::ReturnValue(_) => RETURN_VALUE_OBJ,
             Object::Function(_) => FUNCTION_OBJ,
             Object::Error(_) => ERROR_OBJ,
+            Object::String(_) => STRING_OBJ,
             Object::Null => NULL_OBJ,
         }
     }
@@ -61,6 +65,7 @@ impl Object {
                 let params = params.join(", ");
                 format!("fn({}) {{\n{}\n}}", params, function.body)
             }
+            Object::String(value) => format!("{}", value),
             Object::Error(msg) => format!("ERROR: {}", msg),
             Object::Null => String::from("null"),
         }
