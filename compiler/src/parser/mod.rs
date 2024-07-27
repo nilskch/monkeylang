@@ -112,7 +112,7 @@ impl Parser {
                 }
                 TokenType::LParen => {
                     self.next_token();
-                    self.parse_call_expression(left_expr)
+                    self.parse_object_expression(left_expr)
                 }
                 _ => return left_expr,
             };
@@ -368,13 +368,13 @@ impl Parser {
         identifiers
     }
 
-    fn parse_call_expression(&mut self, function: Expression) -> Expression {
+    fn parse_object_expression(&mut self, function: Expression) -> Expression {
         let token = self.cur_token.clone();
-        let arguments = self.parse_call_arguments();
+        let arguments = self.parse_object_arguments();
         Expression::Call(CallExpression::new(token, function, arguments))
     }
 
-    fn parse_call_arguments(&mut self) -> Vec<Expression> {
+    fn parse_object_arguments(&mut self) -> Vec<Expression> {
         let mut arguments = vec![];
         if self.peek_token_is(TokenType::RParen) {
             self.next_token();
@@ -1076,7 +1076,7 @@ mod tests {
     }
 
     #[test]
-    fn test_call_expression_parsing() {
+    fn test_object_expression_parsing() {
         let input = "add(1, 2 * 3, 4 + 5)";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
@@ -1096,28 +1096,28 @@ mod tests {
             _ => unreachable!(),
         };
 
-        let call_expr = match &expr_stmt.expression {
-            Expression::Call(call_expr) => call_expr,
+        let object_expr = match &expr_stmt.expression {
+            Expression::Call(object_expr) => object_expr,
             _ => unreachable!(),
         };
 
-        test_identifier(&*call_expr.function, String::from("add"));
+        test_identifier(&*object_expr.function, String::from("add"));
         assert_eq!(
-            call_expr.arguments.len(),
+            object_expr.arguments.len(),
             3,
-            "call_expr.arguments.len() not '3'. got='{}'",
-            call_expr.arguments.len()
+            "Object_expr.arguments.len() not '3'. got='{}'",
+            object_expr.arguments.len()
         );
 
-        test_literal_expression(&call_expr.arguments[0], ExpectedValue::Integer(1));
+        test_literal_expression(&object_expr.arguments[0], ExpectedValue::Integer(1));
         test_infix_expression(
-            &call_expr.arguments[1],
+            &object_expr.arguments[1],
             ExpectedValue::Integer(2),
             "*",
             ExpectedValue::Integer(3),
         );
         test_infix_expression(
-            &call_expr.arguments[2],
+            &object_expr.arguments[2],
             ExpectedValue::Integer(4),
             "+",
             ExpectedValue::Integer(5),

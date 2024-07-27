@@ -3,7 +3,6 @@ pub mod environment;
 use crate::ast::{expression::Identifier, statement::BlockStatement};
 use environment::Env;
 use std::fmt::{Display, Formatter, Result};
-use std::rc::Rc;
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";
@@ -16,7 +15,7 @@ pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub enum Object {
     Integer(i64),
     Boolean(bool),
-    ReturnValue(Rc<Object>),
+    ReturnValue(Box<Object>),
     Error(String),
     Function(Function),
     Null,

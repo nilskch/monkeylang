@@ -6,15 +6,15 @@ use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETUR
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
-    let mut result = Rc::from(Object::Null);
+pub fn eval_program(program: Program, env: &Env) -> Object {
+    let mut result = Object::Null;
 
     for stmt in program.statements {
         result = eval_statement(stmt, env);
 
-        match Rc::unwrap_or_clone(Rc::clone(&result)) {
-            Object::ReturnValue(value) => return Rc::clone(&value),
-            Object::Error(_) => return Rc::clone(&result),
+        match result {
+            Object::ReturnValue(value) => return *value,
+            Object::Error(_) => return result,
             _ => continue,
         }
     }
@@ -22,8 +22,8 @@ pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
     result
 }
 
-fn eval_block_statement(block_stmt: BlockStatement, env: &Env) -> Rc<Object> {
-    let mut result = Rc::from(Object::Null);
+fn eval_block_statement(block_stmt: BlockStatement, env: &Env) -> Object {
+    let mut result = Object::Null;
 
     for stmt in block_stmt.statements {
         result = eval_statement(stmt, env);
@@ -37,7 +37,7 @@ fn eval_block_statement(block_stmt: BlockStatement, env: &Env) -> Rc<Object> {
     result
 }
 
-fn eval_statement(stmt: Statement, env: &Env) -> Rc<Object> {
+fn eval_statement(stmt: Statement, env: &Env) -> Object {
     match stmt {
         Statement::Expr(expr_stmt) => eval_expression(expr_stmt.expression, env),
         Statement::Return(return_stmt) => {
@@ -45,7 +45,7 @@ fn eval_statement(stmt: Statement, env: &Env) -> Rc<Object> {
             if is_error(&value) {
                 return value;
             }
-            Rc::from(Object::ReturnValue(value))
+            Object::ReturnValue(Box::new(value))
         }
         Statement::Let(let_stmt) => {
             let value = eval_expression(let_stmt.value, env);
@@ -54,16 +54,16 @@ fn eval_statement(stmt: Statement, env: &Env) -> Rc<Object> {
             }
 
             env.borrow_mut().set(let_stmt.name.value.to_string(), value);
-            Rc::from(Object::Null)
+            Object::Null
         }
-        _ => Rc::from(Object::Null),
+        _ => Object::Null,
     }
 }
 
-fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
+fn eval_expression(expr: Expression, env: &Env) -> Object {
     match expr {
-        Expression::Integer(integer_literal) => Rc::from(Object::Integer(integer_literal.value)),
-        Expression::Boolean(boolean_litereal) => Rc::from(Object::Boolean(boolean_litereal.value)),
+        Expression::Integer(integer_literal) => Object::Integer(integer_literal.value),
+        Expression::Boolean(boolean_litereal) => Object::Boolean(boolean_litereal.value),
         Expression::Prefix(prefix_expr) => {
             let right = eval_expression(*prefix_expr.right, env);
             if is_error(&right) {
@@ -84,11 +84,11 @@ fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
         }
         Expression::IfElse(if_expr) => eval_if_expression(if_expr, env),
         Expression::Ident(ident_expr) => eval_identifier(ident_expr, env),
-        Expression::Function(func_expr) => Rc::from(Object::Function(Function::new(
+        Expression::Function(func_expr) => Object::Function(Function::new(
             func_expr.parameters,
             func_expr.body,
             Rc::clone(env),
-        ))),
+        )),
         Expression::Call(call_expr) => {
             let function = eval_expression(*call_expr.function, env);
             if is_error(&function) {
@@ -96,18 +96,18 @@ fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
             }
             let args = eval_expressions(call_expr.arguments, env);
             if args.len() == 1 && is_error(&args[0]) {
-                return Rc::clone(&args[0]);
+                return args[0].clone();
             }
             apply_function(function, args)
         }
-        _ => Rc::from(Object::Null),
+        _ => Object::Null,
     }
 }
 
-fn apply_function(function: Rc<Object>, args: Vec<Rc<Object>>) -> Rc<Object> {
-    let function = match Rc::unwrap_or_clone(function) {
+fn apply_function(function: Object, args: Vec<Object>) -> Object {
+    let function = match function {
         Object::Function(function) => function,
-        _ => return Rc::from(Object::Error(format!("not a function"))),
+        _ => return Object::Error(format!("not a function")),
     };
 
     let extended_env = extended_function_env(&function, args);
@@ -115,15 +115,15 @@ fn apply_function(function: Rc<Object>, args: Vec<Rc<Object>>) -> Rc<Object> {
     unwrap_return_value(evaluated)
 }
 
-fn unwrap_return_value(obj: Rc<Object>) -> Rc<Object> {
-    let obj = Rc::unwrap_or_clone(obj);
-    match obj.clone() {
-        Object::ReturnValue(val) => val,
-        _ => Rc::from(obj),
+fn unwrap_return_value(obj: Object) -> Object {
+    if let Object::ReturnValue(val) = obj {
+        *val
+    } else {
+        obj
     }
 }
 
-fn extended_function_env(function: &Function, args: Vec<Rc<Object>>) -> Env {
+fn extended_function_env(function: &Function, args: Vec<Object>) -> Env {
     let mut env = Environment::new_enclosed_environment(&function.env);
 
     for (param_idx, param) in function.parameters.iter().enumerate() {
@@ -133,7 +133,7 @@ fn extended_function_env(function: &Function, args: Vec<Rc<Object>>) -> Env {
     Rc::from(RefCell::new(env))
 }
 
-fn eval_expressions(exprs: Vec<Expression>, env: &Env) -> Vec<Rc<Object>> {
+fn eval_expressions(exprs: Vec<Expression>, env: &Env) -> Vec<Object> {
     let mut result = vec![];
 
     for expr in exprs {
@@ -146,129 +146,115 @@ fn eval_expressions(exprs: Vec<Expression>, env: &Env) -> Vec<Rc<Object>> {
     result
 }
 
-fn eval_identifier(ident: Identifier, env: &Env) -> Rc<Object> {
+fn eval_identifier(ident: Identifier, env: &Env) -> Object {
     match env.borrow().get(&ident.value) {
         Some(value) => value,
-        None => Rc::from(Object::Error(format!(
-            "identifier not found: {}",
-            ident.value
-        ))),
+        None => Object::Error(format!("identifier not found: {}", ident.value)),
     }
 }
 
-fn eval_prefix_expression(operator: &str, right: Rc<Object>) -> Rc<Object> {
+fn eval_prefix_expression(operator: &str, right: Object) -> Object {
     match operator {
         "!" => eval_bang_operator_expression(right),
         "-" => eval_minus_prefix_operator_expression(right),
-        _ => Rc::from(Object::Error(format!(
+        _ => Object::Error(format!(
             "unknown operator: {}{}",
             operator,
             right.object_type()
-        ))),
+        )),
     }
 }
 
-fn eval_minus_prefix_operator_expression(right: Rc<Object>) -> Rc<Object> {
-    match *right {
-        Object::Integer(value) => Rc::from(Object::Integer(-value)),
-        _ => Rc::from(Object::Error(format!(
-            "unknown operator: -{}",
-            right.object_type()
-        ))),
+fn eval_minus_prefix_operator_expression(right: Object) -> Object {
+    match right {
+        Object::Integer(value) => Object::Integer(-value),
+        _ => Object::Error(format!("unknown operator: -{}", right.object_type())),
     }
 }
 
-fn eval_bang_operator_expression(right: Rc<Object>) -> Rc<Object> {
-    match *right {
-        Object::Boolean(value) => Rc::from(Object::Boolean(!value)),
-        Object::Null => Rc::from(Object::Boolean(true)),
-        _ => Rc::from(Object::Boolean(false)),
+fn eval_bang_operator_expression(right: Object) -> Object {
+    match right {
+        Object::Boolean(value) => Object::Boolean(!value),
+        Object::Null => Object::Boolean(true),
+        _ => Object::Boolean(false),
     }
 }
 
-fn eval_infix_expression(operator: &str, left: Rc<Object>, right: Rc<Object>) -> Rc<Object> {
+fn eval_infix_expression(operator: &str, left: Object, right: Object) -> Object {
     if left.object_type() != right.object_type() {
-        return Rc::from(Object::Error(format!(
+        return Object::Error(format!(
             "type mismatch: {} {} {}",
             left.object_type(),
             operator,
             right.object_type()
-        )));
+        ));
     }
 
     match left.object_type() {
         INTEGER_OBJ => eval_integer_infix_expression(operator, left, right),
         BOOLEAN_OBJ => eval_boolean_infix_expression(operator, left, right),
-        _ => Rc::from(Object::Error(format!(
+        _ => Object::Error(format!(
             "unknown operator: {} {} {}",
             left.object_type(),
             operator,
             right.object_type()
-        ))),
+        )),
     }
 }
 
-fn eval_boolean_infix_expression(
-    operator: &str,
-    left: Rc<Object>,
-    right: Rc<Object>,
-) -> Rc<Object> {
-    let left_value = match *left {
+fn eval_boolean_infix_expression(operator: &str, left: Object, right: Object) -> Object {
+    let left_value = match left {
         Object::Boolean(value) => value,
-        _ => return Rc::from(Object::Null),
+        _ => return Object::Null,
     };
-    let right_value = match *right {
+    let right_value = match right {
         Object::Boolean(value) => value,
-        _ => return Rc::from(Object::Null),
+        _ => return Object::Null,
     };
 
     match operator {
-        "==" => Rc::from(Object::Boolean(left_value == right_value)),
-        "!=" => Rc::from(Object::Boolean(left_value != right_value)),
-        _ => Rc::from(Object::Error(format!(
+        "==" => Object::Boolean(left_value == right_value),
+        "!=" => Object::Boolean(left_value != right_value),
+        _ => Object::Error(format!(
             "unknown operator: {} {} {}",
             left.object_type(),
             operator,
             right.object_type()
-        ))),
+        )),
     }
 }
 
-fn eval_integer_infix_expression(
-    operator: &str,
-    left: Rc<Object>,
-    right: Rc<Object>,
-) -> Rc<Object> {
-    let left_value = match *left {
+fn eval_integer_infix_expression(operator: &str, left: Object, right: Object) -> Object {
+    let left_value = match left {
         Object::Integer(value) => value,
-        _ => return Rc::from(Object::Null),
+        _ => return Object::Null,
     };
-    let right_value = match *right {
+    let right_value = match right {
         Object::Integer(value) => value,
-        _ => return Rc::from(Object::Null),
+        _ => return Object::Null,
     };
 
     match operator {
-        "+" => Rc::from(Object::Integer(left_value + right_value)),
-        "-" => Rc::from(Object::Integer(left_value - right_value)),
-        "*" => Rc::from(Object::Integer(left_value * right_value)),
-        "/" => Rc::from(Object::Integer(left_value / right_value)),
-        "<" => Rc::from(Object::Boolean(left_value < right_value)),
-        ">" => Rc::from(Object::Boolean(left_value > right_value)),
-        "<=" => Rc::from(Object::Boolean(left_value <= right_value)),
-        ">=" => Rc::from(Object::Boolean(left_value >= right_value)),
-        "==" => Rc::from(Object::Boolean(left_value == right_value)),
-        "!=" => Rc::from(Object::Boolean(left_value != right_value)),
-        _ => Rc::from(Object::Error(format!(
+        "+" => Object::Integer(left_value + right_value),
+        "-" => Object::Integer(left_value - right_value),
+        "*" => Object::Integer(left_value * right_value),
+        "/" => Object::Integer(left_value / right_value),
+        "<" => Object::Boolean(left_value < right_value),
+        ">" => Object::Boolean(left_value > right_value),
+        "<=" => Object::Boolean(left_value <= right_value),
+        ">=" => Object::Boolean(left_value >= right_value),
+        "==" => Object::Boolean(left_value == right_value),
+        "!=" => Object::Boolean(left_value != right_value),
+        _ => Object::Error(format!(
             "unknown operator: {} {} {}",
             left.object_type(),
             operator,
             right.object_type()
-        ))),
+        )),
     }
 }
 
-fn eval_if_expression(if_expr: IfExpression, env: &Env) -> Rc<Object> {
+fn eval_if_expression(if_expr: IfExpression, env: &Env) -> Object {
     let condition = eval_expression(*if_expr.condition, env);
     if is_error(&condition) {
         return condition;
@@ -281,11 +267,11 @@ fn eval_if_expression(if_expr: IfExpression, env: &Env) -> Rc<Object> {
         return eval_block_statement(alternative, env);
     }
 
-    Rc::from(Object::Null)
+    Object::Null
 }
 
-fn is_truthy(object: Rc<Object>) -> bool {
-    match *object {
+fn is_truthy(object: Object) -> bool {
+    match object {
         Object::Null => false,
         Object::Boolean(val) => val,
         _ => true,
@@ -336,7 +322,7 @@ mod tests {
         }
     }
 
-    fn test_eval(input: &str) -> Rc<Object> {
+    fn test_eval(input: &str) -> Object {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();
@@ -345,8 +331,8 @@ mod tests {
         eval_program(program, env)
     }
 
-    fn test_integer_object(object: Rc<Object>, expected: i64) {
-        let integer_value = match *object {
+    fn test_integer_object(object: Object, expected: i64) {
+        let integer_value = match object {
             Object::Integer(integer_value) => integer_value,
             _ => unreachable!(),
         };
@@ -391,8 +377,8 @@ mod tests {
         }
     }
 
-    fn test_boolean_object(object: Rc<Object>, expected: bool) {
-        let boolean_value = match *object {
+    fn test_boolean_object(object: Object, expected: bool) {
+        let boolean_value = match object {
             Object::Boolean(boolean_value) => boolean_value,
             _ => unreachable!(),
         };
@@ -438,7 +424,7 @@ mod tests {
         }
     }
 
-    fn test_object(object: Rc<Object>, expected: Object) {
+    fn test_object(object: Object, expected: Object) {
         let object_type = object.object_type();
         let expected_type = expected.object_type();
 
@@ -455,7 +441,7 @@ mod tests {
         }
     }
 
-    fn test_null_object(object: Rc<Object>) {
+    fn test_null_object(object: Object) {
         let object_type = object.object_type();
         assert_eq!(
             object_type, NULL_OBJ,
@@ -508,12 +494,7 @@ mod tests {
         for (input, expected) in tests {
             let evaluated = test_eval(input);
 
-            let obj = match Rc::try_unwrap(evaluated) {
-                Ok(obj) => obj,
-                Err(_) => unreachable!(),
-            };
-
-            let error_msg = match obj {
+            let error_msg = match evaluated {
                 Object::Error(msg) => msg,
                 _ => unreachable!(),
             };
@@ -547,12 +528,7 @@ mod tests {
 
         let evaluated = test_eval(input);
 
-        let obj = match Rc::try_unwrap(evaluated) {
-            Ok(obj) => obj,
-            Err(_) => unreachable!(),
-        };
-
-        let function = match obj {
+        let function = match evaluated {
             Object::Function(function) => function,
             _ => unreachable!(),
         };

@@ -6,7 +6,7 @@ use super::Object;
 
 #[derive(Clone)]
 pub struct Environment {
-    store: HashMap<String, Rc<Object>>,
+    store: HashMap<String, Object>,
     outer: Option<Env>,
 }
 
@@ -27,9 +27,9 @@ impl Environment {
         }
     }
 
-    pub fn get(&self, name: &str) -> Option<Rc<Object>> {
+    pub fn get(&self, name: &str) -> Option<Object> {
         match self.store.get(name) {
-            Some(object) => Some(Rc::clone(object)),
+            Some(object) => Some(object.clone()),
             None => match &self.outer {
                 Some(env) => env.borrow().get(name),
                 None => None,
@@ -37,7 +37,7 @@ impl Environment {
         }
     }
 
-    pub fn set(&mut self, name: String, value: Rc<Object>) {
+    pub fn set(&mut self, name: String, value: Object) {
         self.store.insert(name, value);
     }
 }
