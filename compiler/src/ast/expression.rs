@@ -6,6 +6,7 @@ use std::fmt::{Display, Formatter, Result};
 pub enum Expression {
     Ident(Identifier),
     Integer(IntegerLiteral),
+    String(StringLiteral),
     Boolean(BooleanLiteral),
     Prefix(PrefixExpression),
     Infix(InfixExpression),
@@ -26,6 +27,7 @@ impl Display for Expression {
             Expression::IfElse(if_expr) => write!(f, "{}", if_expr),
             Expression::Function(func) => write!(f, "{}", func),
             Expression::Call(call_expr) => write!(f, "{}", call_expr),
+            Expression::String(string) => write!(f, "{}", string),
             Expression::Nil => unreachable!(),
         }
     }
@@ -43,6 +45,7 @@ impl Expression {
             Expression::IfElse(if_expr) => &if_expr.token.literal,
             Expression::Function(func) => &func.token.literal,
             Expression::Call(call_expr) => &call_expr.token.literal,
+            Expression::String(string) => &string.token.literal,
             Expression::Nil => unreachable!(),
         }
     }
@@ -81,6 +84,24 @@ impl Display for IntegerLiteral {
 impl IntegerLiteral {
     pub fn new(token: Token, value: i64) -> IntegerLiteral {
         IntegerLiteral { token, value }
+    }
+}
+
+#[derive(Clone)]
+pub struct StringLiteral {
+    pub token: Token,
+    pub value: String,
+}
+
+impl Display for StringLiteral {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+impl StringLiteral {
+    pub fn new(token: Token, value: String) -> StringLiteral {
+        StringLiteral { token, value }
     }
 }
 

@@ -69,6 +69,7 @@ impl Lexer {
             '(' => Token::new(TokenType::LParen, self.ch.into()),
             ')' => Token::new(TokenType::RParen, self.ch.into()),
             '\0' => Token::new(TokenType::Eof, "".into()),
+            '"' => Token::new(TokenType::String, self.read_string()),
             _ => {
                 if self.is_letter(self.ch) {
                     let literal = self.read_identifier();
@@ -87,6 +88,16 @@ impl Lexer {
 
         self.read_char();
         token
+    }
+
+    fn read_string(&mut self) -> String {
+        let pos = self.position + 1;
+        self.read_char();
+
+        while self.ch != '"' && self.ch != '\0' {
+            self.read_char();
+        }
+        return self.input[pos..self.position].into();
     }
 
     fn peek_char(&self) -> char {
@@ -168,7 +179,9 @@ mod tests {
         10 == 10;
         10 != 9;
         10 <= 10;
-        10 >= 10;";
+        10 >= 10;
+        \"foobar\"
+        \"foo bar\"";
 
         let tests = [
             (TokenType::Let, "let"),
@@ -252,6 +265,8 @@ mod tests {
             (TokenType::GtEq, ">="),
             (TokenType::Int, "10"),
             (TokenType::Semicolon, ";"),
+            (TokenType::String, "foobar"),
+            (TokenType::String, "foo bar"),
             (TokenType::Eof, ""),
         ];
 

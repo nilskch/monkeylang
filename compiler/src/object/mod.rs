@@ -1,10 +1,9 @@
 pub mod environment;
 
+use crate::ast::{expression::Identifier, statement::BlockStatement};
 use environment::Env;
 use std::fmt::{Display, Formatter, Result};
 use std::rc::Rc;
-
-use crate::ast::{expression::Identifier, statement::BlockStatement};
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";

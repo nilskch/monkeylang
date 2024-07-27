@@ -5,7 +5,7 @@ use precedence::PRECEDENCES;
 use self::precedence::Precedence;
 use crate::ast::expression::{
     BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier, IfExpression,
-    InfixExpression, IntegerLiteral, PrefixExpression,
+    InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -84,6 +84,7 @@ impl Parser {
             TokenType::LParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
             TokenType::Function => self.parse_function_literal(),
+            TokenType::String => self.parse_string_literal(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
@@ -118,6 +119,13 @@ impl Parser {
         }
 
         left_expr
+    }
+
+    fn parse_string_literal(&self) -> Expression {
+        Expression::String(StringLiteral::new(
+            self.cur_token.clone(),
+            self.cur_token.clone().literal,
+        ))
     }
 
     fn parse_identifier(&self) -> Expression {
@@ -1113,6 +1121,33 @@ mod tests {
             ExpectedValue::Integer(4),
             "+",
             ExpectedValue::Integer(5),
+        );
+    }
+
+    #[test]
+    fn test_parsing_string_literal() {
+        let input = "\"hello world\"";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let string_literal = match &expr_stmt.expression {
+            Expression::String(string_literal) => string_literal,
+            _ => unreachable!(),
+        };
+
+        let expected = "hello world";
+        assert_eq!(
+            string_literal.value, expected,
+            "invalid string literal. expected='{}'. got='{}'",
+            expected, string_literal.value
         );
     }
 }

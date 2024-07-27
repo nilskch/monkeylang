@@ -41,6 +41,7 @@ pub enum TokenType {
     If,
     Else,
     Return,
+    String,
 }
 
 impl Display for TokenType {
@@ -85,6 +86,7 @@ impl Display for TokenType {
             TokenType::If => write!(f, "If"),
             TokenType::Else => write!(f, "Else"),
             TokenType::Return => write!(f, "Return"),
+            TokenType::String => write!(f, "String"),
         }
     }
 }
