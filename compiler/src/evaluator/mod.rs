@@ -2,7 +2,9 @@ use crate::ast::expression::{Expression, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::{Env, Environment};
-use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
+use crate::object::{
+    Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ, STRING_OBJ,
+};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -192,8 +194,30 @@ fn eval_infix_expression(operator: &str, left: Object, right: Object) -> Object 
     }
 
     match left.object_type() {
+        STRING_OBJ => eval_string_infix_expression(operator, left, right),
         INTEGER_OBJ => eval_integer_infix_expression(operator, left, right),
         BOOLEAN_OBJ => eval_boolean_infix_expression(operator, left, right),
+        _ => Object::Error(format!(
+            "unknown operator: {} {} {}",
+            left.object_type(),
+            operator,
+            right.object_type()
+        )),
+    }
+}
+
+fn eval_string_infix_expression(operator: &str, left: Object, right: Object) -> Object {
+    let left_value = match &left {
+        Object::String(value) => value,
+        _ => return Object::Null,
+    };
+    let right_value = match &right {
+        Object::String(value) => value,
+        _ => return Object::Null,
+    };
+
+    match operator {
+        "+" => Object::String(format!("{}{}", left_value, right_value)),
         _ => Object::Error(format!(
             "unknown operator: {} {} {}",
             left.object_type(),
@@ -490,6 +514,7 @@ mod tests {
                 "unknown operator: BOOLEAN + BOOLEAN",
             ),
             ("foobar", "identifier not found: foobar"),
+            ("\"Hello\" - \"World\"", "unknown operator: STRING - STRING"),
         ];
 
         for (input, expected) in tests {
@@ -586,7 +611,25 @@ mod tests {
         let expected = "Hello World!";
         assert_eq!(
             string_literal, expected,
-            "invalid string. expected='{}'. got='{}'",
+            "String has the wrong value. expected='{}'. got='{}'",
+            expected, string_literal
+        );
+    }
+
+    #[test]
+    fn test_string_concatenation() {
+        let input = "\"Hello\" + \" \" + \"World\" + \"!\"";
+        let evaluated = test_eval(input);
+
+        let string_literal = match evaluated {
+            Object::String(string_literal) => string_literal,
+            _ => unreachable!(),
+        };
+
+        let expected = "Hello World!";
+        assert_eq!(
+            string_literal, expected,
+            "String has the wrong value. expected='{}'. got='{}'",
             expected, string_literal
         );
     }
