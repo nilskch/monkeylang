@@ -20,12 +20,12 @@ impl Environment {
         }
     }
 
-    pub fn new_enclosed_environment(outer: &Env) -> Self {
-        Environment {
-            store: HashMap::new(),
-            outer: Some(Rc::clone(outer)),
-        }
-    }
+    // pub fn new_enclosed_environment(outer: &Env) -> Self {
+    //     Environment {
+    //         store: HashMap::new(),
+    //         outer: Some(Rc::clone(outer)),
+    //     }
+    // }
 
     pub fn get(&self, name: &str) -> Option<Rc<Object>> {
         match self.store.get(name) {

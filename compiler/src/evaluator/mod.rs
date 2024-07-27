@@ -3,7 +3,6 @@ use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::Env;
 use crate::object::{Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ};
-use std::borrow::Borrow;
 use std::rc::Rc;
 
 pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
@@ -12,11 +11,10 @@ pub fn eval_program(program: Program, env: &Env) -> Rc<Object> {
     for stmt in program.statements {
         result = eval_statement(stmt, env);
 
-        if let Object::ReturnValue(value) = result.borrow() {
-            return Rc::clone(value);
-        }
-        if let Object::Error(_) = result.borrow() {
-            return result;
+        match Rc::unwrap_or_clone(Rc::clone(&result)) {
+            Object::ReturnValue(value) => return Rc::clone(&value),
+            Object::Error(_) => return Rc::clone(&result),
+            _ => continue,
         }
     }
 
@@ -94,7 +92,7 @@ fn eval_expression(expr: Expression, env: &Env) -> Rc<Object> {
 }
 
 fn eval_identifier(ident: Identifier, env: &Env) -> Rc<Object> {
-    match env.borrow_mut().get(&ident.value) {
+    match env.borrow().get(&ident.value) {
         Some(value) => value,
         None => Rc::from(Object::Error(format!(
             "identifier not found: {}",
@@ -455,7 +453,12 @@ mod tests {
         for (input, expected) in tests {
             let evaluated = test_eval(input);
 
-            let error_msg = match evaluated.borrow() {
+            let obj = match Rc::try_unwrap(evaluated) {
+                Ok(obj) => obj,
+                Err(_) => unreachable!(),
+            };
+
+            let error_msg = match obj {
                 Object::Error(msg) => msg,
                 _ => unreachable!(),
             };
@@ -488,8 +491,14 @@ mod tests {
         let input = "fn(x) { x + 1;}";
 
         let evaluated = test_eval(input);
-        let function = match evaluated.borrow() {
-            Object::Function(msg) => msg,
+
+        let obj = match Rc::try_unwrap(evaluated) {
+            Ok(obj) => obj,
+            Err(_) => unreachable!(),
+        };
+
+        let function = match obj {
+            Object::Function(function) => function,
             _ => unreachable!(),
         };
 
