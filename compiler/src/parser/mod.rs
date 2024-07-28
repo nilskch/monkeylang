@@ -3,8 +3,9 @@ mod precedence;
 use precedence::Precedence;
 
 use crate::ast::expression::{
-    ArrayLiteral, BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier,
-    IfExpression, Index, InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
+    ArrayLiteral, BooleanLiteral, CallExpression, Expression, FunctionLiteral, HashLiteral,
+    Identifier, IfExpression, Index, InfixExpression, IntegerLiteral, PrefixExpression,
+    StringLiteral,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -12,6 +13,7 @@ use crate::ast::statement::{
 };
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
+use std::collections::HashMap;
 
 pub struct Parser {
     pub lexer: Lexer,
@@ -85,9 +87,10 @@ impl Parser {
             TokenType::Function => self.parse_function_literal(),
             TokenType::String => self.parse_string_literal(),
             TokenType::LBracket => self.parse_array_literal(),
+            TokenType::LBrace => self.parse_hash_literal(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
-                return Expression::Nil;
+                return Expression::Null;
             }
         };
 
@@ -125,13 +128,41 @@ impl Parser {
         left_expr
     }
 
+    fn parse_hash_literal(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+        let mut pairs = HashMap::new();
+
+        while !self.peek_token_is(&TokenType::RBrace) {
+            self.next_token();
+            let key = self.parse_expression(Precedence::Lowest);
+
+            if !self.expect_peek(&TokenType::Colon) {
+                return Expression::Null;
+            }
+
+            self.next_token();
+            let value = self.parse_expression(Precedence::Lowest);
+            pairs.insert(key, value);
+
+            if !self.peek_token_is(&TokenType::RBrace) && !self.expect_peek(&TokenType::Comma) {
+                return Expression::Null;
+            }
+        }
+
+        if !self.expect_peek(&TokenType::RBrace) {
+            return Expression::Null;
+        }
+
+        Expression::Hash(HashLiteral::new(token, pairs))
+    }
+
     fn parse_index_expression(&mut self, left: Expression) -> Expression {
         let token = self.cur_token.clone();
         self.next_token();
         let index = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_peek(&TokenType::RBracket) {
-            Expression::Nil
+            Expression::Null
         } else {
             Expression::Index(Index::new(token, left, index))
         }
@@ -141,7 +172,7 @@ impl Parser {
         let token = self.cur_token.clone();
         let elements = match self.parse_expression_list(&TokenType::RBracket) {
             Some(elements) => elements,
-            None => return Expression::Nil,
+            None => return Expression::Null,
         };
         Expression::Array(ArrayLiteral::new(token, elements))
     }
@@ -189,7 +220,7 @@ impl Parser {
             Err(_) => {
                 let msg = format!("could not parse '{}' to integer", token.literal);
                 self.errors.push(msg);
-                return Expression::Nil;
+                return Expression::Null;
             }
         };
 
@@ -306,7 +337,7 @@ impl Parser {
         let expr = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_peek(&TokenType::RParen) {
-            Expression::Nil
+            Expression::Null
         } else {
             expr
         }
@@ -316,7 +347,7 @@ impl Parser {
         let token = self.cur_token.clone();
 
         if !self.expect_peek(&TokenType::LParen) {
-            return Expression::Nil;
+            return Expression::Null;
         }
 
         self.next_token();
@@ -324,11 +355,11 @@ impl Parser {
         let condition = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_peek(&TokenType::RParen) {
-            return Expression::Nil;
+            return Expression::Null;
         }
 
         if !self.expect_peek(&TokenType::LBrace) {
-            return Expression::Nil;
+            return Expression::Null;
         }
 
         let consequence = self.parse_block_statement();
@@ -374,13 +405,13 @@ impl Parser {
         let token = self.cur_token.clone();
 
         if !self.expect_peek(&TokenType::LParen) {
-            return Expression::Nil;
+            return Expression::Null;
         }
 
         let parameters = self.parse_function_parameters();
 
         if !self.expect_peek(&TokenType::LBrace) {
-            return Expression::Nil;
+            return Expression::Null;
         }
 
         let body = self.parse_block_statement();
@@ -420,7 +451,7 @@ impl Parser {
         let token = self.cur_token.clone();
         let arguments = match self.parse_expression_list(&TokenType::RParen) {
             Some(arguments) => arguments,
-            None => return Expression::Nil,
+            None => return Expression::Null,
         };
 
         Expression::Call(CallExpression::new(token, function, arguments))
@@ -1257,5 +1288,134 @@ mod tests {
             "+",
             ExpectedValue::Integer(1),
         );
+    }
+
+    #[test]
+    fn test_parsing_hash_literal_string_keys() {
+        let input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let hash_expr = match &expr_stmt.expression {
+            Expression::Hash(hash_expr) => hash_expr,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            hash_expr.pairs.len(),
+            3,
+            "hash.pairs has wrong length. want=3. got={}",
+            hash_expr.pairs.len()
+        );
+
+        let mut expected = HashMap::new();
+        expected.insert(String::from("one"), 1 as i64);
+        expected.insert(String::from("two"), 2 as i64);
+        expected.insert(String::from("three"), 3 as i64);
+
+        for (key, value) in hash_expr.pairs.iter() {
+            let string_literal = match key {
+                Expression::String(string_literal) => string_literal,
+                _ => unreachable!(),
+            };
+
+            let expected_value = match expected.get(&string_literal.value) {
+                Some(val) => *val,
+                None => unreachable!(),
+            };
+
+            test_integer_literal(value, expected_value)
+        }
+    }
+
+    #[test]
+    fn test_parsing_empty_hash_literal() {
+        let input = "{}";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let hash_expr = match &expr_stmt.expression {
+            Expression::Hash(hash_expr) => hash_expr,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            hash_expr.pairs.len(),
+            0,
+            "hash.pairs has wrong length. want=0. got={}",
+            hash_expr.pairs.len()
+        );
+    }
+
+    #[test]
+    fn test_parsing_hash_literal_with_expression() {
+        let input = "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let hash_expr = match &expr_stmt.expression {
+            Expression::Hash(hash_expr) => hash_expr,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            hash_expr.pairs.len(),
+            3,
+            "hash.pairs has wrong length. want=3. got={}",
+            hash_expr.pairs.len()
+        );
+
+        for (key, value) in hash_expr.pairs.iter() {
+            let string_literal = match key {
+                Expression::String(string_literal) => string_literal,
+                _ => unreachable!(),
+            };
+
+            match &*string_literal.value {
+                "one" => test_infix_expression(
+                    value,
+                    ExpectedValue::Integer(0),
+                    "+",
+                    ExpectedValue::Integer(1),
+                ),
+                "two" => test_infix_expression(
+                    value,
+                    ExpectedValue::Integer(10),
+                    "-",
+                    ExpectedValue::Integer(8),
+                ),
+                "three" => test_infix_expression(
+                    value,
+                    ExpectedValue::Integer(15),
+                    "/",
+                    ExpectedValue::Integer(5),
+                ),
+                _ => unreachable!(),
+            }
+        }
     }
 }

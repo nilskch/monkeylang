@@ -4,7 +4,6 @@ use super::evaluator::eval_program;
 use super::lexer::Lexer;
 use super::object::Object;
 use super::parser::Parser;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;
@@ -34,7 +33,7 @@ pub fn start() {
         }
 
         let evaluated = eval_program(program, env);
-        match evaluated.borrow() {
+        match evaluated {
             Object::Null => continue,
             _ => println!("{}", evaluated.inspect()),
         }

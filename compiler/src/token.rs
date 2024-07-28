@@ -26,6 +26,7 @@ pub enum TokenType {
     NotEq,
 
     Comma,
+    Colon,
     Semicolon,
 
     LParen,
@@ -74,6 +75,7 @@ impl Display for TokenType {
             TokenType::NotEq => write!(f, "!="),
 
             TokenType::Comma => write!(f, ","),
+            TokenType::Colon => write!(f, ":"),
             TokenType::Semicolon => write!(f, ";"),
 
             TokenType::LParen => write!(f, "("),
@@ -95,7 +97,7 @@ impl Display for TokenType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
