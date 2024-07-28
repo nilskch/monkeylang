@@ -1,18 +1,18 @@
 use clap::{Arg, Command};
 
 fn main() {
-    let _m = Command::new("My Program")
+    let cli = Command::new("monkey")
         .author("Nils Koch, mail@nilskch.dev")
         .version("1.0.2")
-        .about("Use the monkey cli to run, build, or format monkey code!")
-        .arg(Arg::new("command").help("'run', 'build', 'fmt'."))
+        .about("Use the monkey cli to run or format monkey code!")
+        .arg(Arg::new("command").help("'run' or 'fmt'."))
         .arg(Arg::new("file").help("The path to the .mky file."))
-        .after_help(
-            "Longer explanation to appear after the options when \
-                     displaying the help information from --help or -h",
-        )
         .get_matches();
 
-    // start the cli
-    compiler::repl::start()
+    if !cli.args_present() {
+        println!("Welcome to the Monkey Programming Language!");
+        return compiler::repl::start();
+    }
+
+    // TODO: handle 'run' and 'fmt' subcommands
 }
