@@ -31,15 +31,23 @@ pub enum Object {
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            Object::Integer(_) => write!(f, "TODO"),
-            Object::Boolean(_) => write!(f, "TODO"),
-            Object::ReturnValue(_) => write!(f, "TODO"),
-            Object::Function(_) => write!(f, "TODO"),
-            Object::Error(_) => write!(f, "TODO"),
-            Object::String(_) => write!(f, "TODO"),
-            Object::Builtin(_) => write!(f, "TODO"),
-            Object::Array(_) => write!(f, "TODO"),
-            Object::Null => write!(f, "TODO"),
+            Object::Integer(val) => write!(f, "{}", val),
+            Object::Boolean(val) => write!(f, "{}", val),
+            Object::ReturnValue(val) => write!(f, "{}", val),
+            Object::Function(val) => write!(f, "{}", val),
+            Object::Error(val) => write!(f, "{}", val),
+            Object::String(val) => write!(f, "{}", val),
+            Object::Builtin(val) => write!(f, "{}", val),
+            Object::Array(elements) => {
+                let elements: Vec<String> = elements
+                    .clone()
+                    .into_iter()
+                    .map(|elem| format!("{}", elem))
+                    .collect();
+                let elements = elements.clone().join(", ");
+                write!(f, "[{}]", elements)
+            }
+            Object::Null => write!(f, "null"),
         }
     }
 }
@@ -102,5 +110,19 @@ impl Function {
             body,
             env,
         }
+    }
+}
+
+impl Display for Function {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let parameters: Vec<String> = self
+            .parameters
+            .clone()
+            .into_iter()
+            .map(|elem| format!("{}", elem))
+            .collect();
+        let parameters = parameters.join(", ");
+
+        write!(f, "fn({}) {{ {} }}", parameters, self.body)
     }
 }
