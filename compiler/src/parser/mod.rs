@@ -1,8 +1,7 @@
 mod precedence;
 
-use precedence::PRECEDENCES;
+use precedence::Precedence;
 
-use self::precedence::Precedence;
 use crate::ast::expression::{
     ArrayLiteral, BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier,
     IfExpression, Index, InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
@@ -278,15 +277,15 @@ impl Parser {
     }
 
     fn peek_precedence(&self) -> Precedence {
-        match PRECEDENCES.get(&self.peek_token.token_type) {
-            Some(precedence) => precedence.clone(),
+        match Precedence::get(&self.peek_token.token_type) {
+            Some(precedence) => precedence,
             None => Precedence::Lowest,
         }
     }
 
     fn cur_precedence(&self) -> Precedence {
-        match PRECEDENCES.get(&self.cur_token.token_type) {
-            Some(precedence) => precedence.clone(),
+        match Precedence::get(&self.cur_token.token_type) {
+            Some(precedence) => precedence,
             None => Precedence::Lowest,
         }
     }

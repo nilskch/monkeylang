@@ -1,6 +1,4 @@
 use crate::token::TokenType;
-use lazy_static::lazy_static;
-use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, PartialOrd)]
 pub enum Precedence {
@@ -11,24 +9,25 @@ pub enum Precedence {
     Product,     // *
     Prefix,      // -X or !X
     Object,      // myFunction(X)
-    Index,
+    Index,       // array[index]
 }
 
-lazy_static! {
-    pub static ref PRECEDENCES: HashMap<TokenType, Precedence> = {
-        let mut m = HashMap::new();
-        m.insert(TokenType::Eq, Precedence::Equals);
-        m.insert(TokenType::NotEq, Precedence::Equals);
-        m.insert(TokenType::Lt, Precedence::LessGreater);
-        m.insert(TokenType::Gt, Precedence::LessGreater);
-        m.insert(TokenType::LtEq, Precedence::LessGreater);
-        m.insert(TokenType::GtEq, Precedence::LessGreater);
-        m.insert(TokenType::Plus, Precedence::Sum);
-        m.insert(TokenType::Minus, Precedence::Sum);
-        m.insert(TokenType::Slash, Precedence::Product);
-        m.insert(TokenType::Asterik, Precedence::Product);
-        m.insert(TokenType::LParen, Precedence::Object);
-        m.insert(TokenType::LBracket, Precedence::Index);
-        m
-    };
+impl Precedence {
+    pub fn get(token_type: &TokenType) -> Option<Precedence> {
+        match token_type {
+            TokenType::Eq => Some(Precedence::Equals),
+            TokenType::NotEq => Some(Precedence::Equals),
+            TokenType::Lt => Some(Precedence::LessGreater),
+            TokenType::Gt => Some(Precedence::LessGreater),
+            TokenType::LtEq => Some(Precedence::LessGreater),
+            TokenType::GtEq => Some(Precedence::LessGreater),
+            TokenType::Plus => Some(Precedence::Sum),
+            TokenType::Minus => Some(Precedence::Sum),
+            TokenType::Slash => Some(Precedence::Product),
+            TokenType::Asterik => Some(Precedence::Product),
+            TokenType::LParen => Some(Precedence::Object),
+            TokenType::LBracket => Some(Precedence::Index),
+            _ => None,
+        }
+    }
 }
