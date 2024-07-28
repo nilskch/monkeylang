@@ -8,6 +8,8 @@ pub enum Builtin {
     First,
     Last,
     Rest,
+    Push,
+    Print,
 }
 
 impl Builtin {
@@ -17,6 +19,8 @@ impl Builtin {
             "first" => Some(Object::Builtin(Builtin::First)),
             "last" => Some(Object::Builtin(Builtin::Last)),
             "rest" => Some(Object::Builtin(Builtin::Rest)),
+            "push" => Some(Object::Builtin(Builtin::Push)),
+            "print" => Some(Object::Builtin(Builtin::Print)),
             _ => None,
         }
     }
@@ -111,6 +115,33 @@ impl Builtin {
                     Object::Null
                 }
             }
+            Builtin::Push => {
+                if args.len() != 2 {
+                    return Object::Error(format!(
+                        "wrong number of arguments. got={}. want=2",
+                        args.len()
+                    ));
+                }
+                let arr = match &args[0] {
+                    Object::Array(arr) => arr,
+                    _ => {
+                        return Object::Error(format!(
+                            "argument to `rest` must be `ARRAY, got {}",
+                            args[0].object_type()
+                        ))
+                    }
+                };
+                let mut new_arr = arr.clone();
+                new_arr.push(args[1].clone());
+
+                Object::Array(new_arr)
+            }
+            Builtin::Print => {
+                for arg in args.iter() {
+                    println!("{}", arg);
+                }
+                Object::Null
+            }
         }
     }
 }
@@ -122,6 +153,8 @@ impl Display for Builtin {
             Builtin::First => write!(f, "first"),
             Builtin::Last => write!(f, "last"),
             Builtin::Rest => write!(f, "rest"),
+            Builtin::Push => write!(f, "push"),
+            Builtin::Print => write!(f, "print"),
         }
     }
 }
