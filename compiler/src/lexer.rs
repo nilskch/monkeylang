@@ -66,6 +66,8 @@ impl Lexer {
             ',' => Token::new(TokenType::Comma, self.ch.into()),
             '{' => Token::new(TokenType::LBrace, self.ch.into()),
             '}' => Token::new(TokenType::RBrace, self.ch.into()),
+            '[' => Token::new(TokenType::LBracket, self.ch.into()),
+            ']' => Token::new(TokenType::RBracket, self.ch.into()),
             '(' => Token::new(TokenType::LParen, self.ch.into()),
             ')' => Token::new(TokenType::RParen, self.ch.into()),
             '\0' => Token::new(TokenType::Eof, "".into()),
@@ -181,7 +183,8 @@ mod tests {
         10 <= 10;
         10 >= 10;
         \"foobar\"
-        \"foo bar\"";
+        \"foo bar\"
+        [1, 2];";
 
         let tests = [
             (TokenType::Let, "let"),
@@ -267,6 +270,12 @@ mod tests {
             (TokenType::Semicolon, ";"),
             (TokenType::String, "foobar"),
             (TokenType::String, "foo bar"),
+            (TokenType::LBracket, "["),
+            (TokenType::Int, "1"),
+            (TokenType::Comma, ","),
+            (TokenType::Int, "2"),
+            (TokenType::RBracket, "]"),
+            (TokenType::Semicolon, ";"),
             (TokenType::Eof, ""),
         ];
 

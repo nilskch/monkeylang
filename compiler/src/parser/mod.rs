@@ -4,8 +4,8 @@ use precedence::PRECEDENCES;
 
 use self::precedence::Precedence;
 use crate::ast::expression::{
-    BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier, IfExpression,
-    InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
+    ArrayLiteral, BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier,
+    IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -61,7 +61,7 @@ impl Parser {
         let token = self.cur_token.clone();
         let expression = self.parse_expression(Precedence::Lowest);
 
-        if self.peek_token_is(TokenType::Semicolon) {
+        if self.peek_token_is(&TokenType::Semicolon) {
             self.next_token();
         }
 
@@ -85,17 +85,18 @@ impl Parser {
             TokenType::If => self.parse_if_expression(),
             TokenType::Function => self.parse_function_literal(),
             TokenType::String => self.parse_string_literal(),
+            TokenType::LBracket => self.parse_array_literal(),
             _ => {
                 self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
                 return Expression::Nil;
             }
         };
 
-        if self.peek_token_is(TokenType::Semicolon) || precedence >= self.peek_precedence() {
+        if self.peek_token_is(&TokenType::Semicolon) || precedence >= self.peek_precedence() {
             return left_expr;
         }
 
-        while !self.peek_token_is(TokenType::Semicolon) && precedence < self.peek_precedence() {
+        while !self.peek_token_is(&TokenType::Semicolon) && precedence < self.peek_precedence() {
             left_expr = match self.peek_token.token_type {
                 TokenType::Plus
                 | TokenType::Minus
@@ -112,13 +113,45 @@ impl Parser {
                 }
                 TokenType::LParen => {
                     self.next_token();
-                    self.parse_object_expression(left_expr)
+                    self.parse_call_expression(left_expr)
                 }
                 _ => return left_expr,
             };
         }
 
         left_expr
+    }
+
+    fn parse_array_literal(&mut self) -> Expression {
+        let token = self.cur_token.clone();
+        let elements = match self.parse_expression_list(&TokenType::RBracket) {
+            Some(elements) => elements,
+            None => return Expression::Nil,
+        };
+        Expression::Array(ArrayLiteral::new(token, elements))
+    }
+
+    fn parse_expression_list(&mut self, end: &TokenType) -> Option<Vec<Expression>> {
+        let mut expressions = vec![];
+        if self.peek_token_is(end) {
+            self.next_token();
+            return Some(expressions);
+        }
+
+        self.next_token();
+        expressions.push(self.parse_expression(Precedence::Lowest));
+
+        while self.peek_token_is(&TokenType::Comma) {
+            self.next_token();
+            self.next_token();
+            expressions.push(self.parse_expression(Precedence::Lowest));
+        }
+
+        if !self.expect_peek(end) {
+            return None;
+        }
+
+        Some(expressions)
     }
 
     fn parse_string_literal(&self) -> Expression {
@@ -162,13 +195,13 @@ impl Parser {
     fn parse_let_statement(&mut self) -> Statement {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(TokenType::Ident) {
+        if !self.expect_peek(&TokenType::Ident) {
             return Statement::Nil;
         }
 
         let name = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
 
-        if !self.expect_peek(TokenType::Assign) {
+        if !self.expect_peek(&TokenType::Assign) {
             return Statement::Nil;
         }
 
@@ -187,16 +220,16 @@ impl Parser {
         self.cur_token.token_type == token_type
     }
 
-    fn peek_token_is(&self, token_type: TokenType) -> bool {
-        self.peek_token.token_type == token_type
+    fn peek_token_is(&self, token_type: &TokenType) -> bool {
+        self.peek_token.token_type == *token_type
     }
 
-    fn expect_peek(&mut self, token_type: TokenType) -> bool {
-        if self.peek_token_is(token_type.clone()) {
+    fn expect_peek(&mut self, token_type: &TokenType) -> bool {
+        if self.peek_token_is(token_type) {
             self.next_token();
             true
         } else {
-            self.peek_error(&token_type);
+            self.peek_error(token_type);
             false
         }
     }
@@ -215,7 +248,7 @@ impl Parser {
         self.next_token();
         let return_value = self.parse_expression(Precedence::Lowest);
 
-        if self.peek_token_is(TokenType::Semicolon) {
+        if self.peek_token_is(&TokenType::Semicolon) {
             self.next_token();
         }
 
@@ -257,7 +290,7 @@ impl Parser {
         self.next_token();
         let expr = self.parse_expression(Precedence::Lowest);
 
-        if !self.expect_peek(TokenType::RParen) {
+        if !self.expect_peek(&TokenType::RParen) {
             Expression::Nil
         } else {
             expr
@@ -267,7 +300,7 @@ impl Parser {
     fn parse_if_expression(&mut self) -> Expression {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(TokenType::LParen) {
+        if !self.expect_peek(&TokenType::LParen) {
             return Expression::Nil;
         }
 
@@ -275,20 +308,20 @@ impl Parser {
 
         let condition = self.parse_expression(Precedence::Lowest);
 
-        if !self.expect_peek(TokenType::RParen) {
+        if !self.expect_peek(&TokenType::RParen) {
             return Expression::Nil;
         }
 
-        if !self.expect_peek(TokenType::LBrace) {
+        if !self.expect_peek(&TokenType::LBrace) {
             return Expression::Nil;
         }
 
         let consequence = self.parse_block_statement();
 
-        let alternative = if self.peek_token_is(TokenType::Else) {
+        let alternative = if self.peek_token_is(&TokenType::Else) {
             self.next_token();
 
-            if !self.expect_peek(TokenType::LBrace) {
+            if !self.expect_peek(&TokenType::LBrace) {
                 None
             } else {
                 Some(self.parse_block_statement())
@@ -325,13 +358,13 @@ impl Parser {
     fn parse_function_literal(&mut self) -> Expression {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(TokenType::LParen) {
+        if !self.expect_peek(&TokenType::LParen) {
             return Expression::Nil;
         }
 
         let parameters = self.parse_function_parameters();
 
-        if !self.expect_peek(TokenType::LBrace) {
+        if !self.expect_peek(&TokenType::LBrace) {
             return Expression::Nil;
         }
 
@@ -343,7 +376,7 @@ impl Parser {
     fn parse_function_parameters(&mut self) -> Vec<Identifier> {
         let mut identifiers = vec![];
 
-        if self.peek_token_is(TokenType::RParen) {
+        if self.peek_token_is(&TokenType::RParen) {
             self.next_token();
             return identifiers;
         }
@@ -353,7 +386,7 @@ impl Parser {
         let ident = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
         identifiers.push(ident);
 
-        while self.peek_token_is(TokenType::Comma) {
+        while self.peek_token_is(&TokenType::Comma) {
             self.next_token();
             self.next_token();
 
@@ -361,38 +394,21 @@ impl Parser {
             identifiers.push(ident);
         }
 
-        if !self.expect_peek(TokenType::RParen) {
+        if !self.expect_peek(&TokenType::RParen) {
             return vec![];
         }
 
         identifiers
     }
 
-    fn parse_object_expression(&mut self, function: Expression) -> Expression {
+    fn parse_call_expression(&mut self, function: Expression) -> Expression {
         let token = self.cur_token.clone();
-        let arguments = self.parse_object_arguments();
+        let arguments = match self.parse_expression_list(&TokenType::RParen) {
+            Some(arguments) => arguments,
+            None => return Expression::Nil,
+        };
+
         Expression::Call(CallExpression::new(token, function, arguments))
-    }
-
-    fn parse_object_arguments(&mut self) -> Vec<Expression> {
-        let mut arguments = vec![];
-        if self.peek_token_is(TokenType::RParen) {
-            self.next_token();
-            return arguments;
-        }
-
-        self.next_token();
-        arguments.push(self.parse_expression(Precedence::Lowest));
-
-        while self.peek_token_is(TokenType::Comma) {
-            self.next_token();
-            self.next_token();
-            arguments.push(self.parse_expression(Precedence::Lowest));
-        }
-
-        self.expect_peek(TokenType::RParen);
-
-        arguments
     }
 }
 
@@ -1148,6 +1164,47 @@ mod tests {
             string_literal.value, expected,
             "invalid string literal. expected='{}'. got='{}'",
             expected, string_literal.value
+        );
+    }
+
+    #[test]
+    fn test_parsing_array_literals() {
+        let input = "[1, 2 * 2, 3 + 3]";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let array_literal = match &expr_stmt.expression {
+            Expression::Array(array_literal) => array_literal,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            array_literal.elements.len(),
+            3,
+            "len(arr.elements) not 3. got={}",
+            array_literal.elements.len()
+        );
+
+        test_integer_literal(&array_literal.elements[0], 1);
+        test_infix_expression(
+            &array_literal.elements[1],
+            ExpectedValue::Integer(2),
+            "*",
+            ExpectedValue::Integer(2),
+        );
+        test_infix_expression(
+            &array_literal.elements[2],
+            ExpectedValue::Integer(3),
+            "+",
+            ExpectedValue::Integer(3),
         );
     }
 }

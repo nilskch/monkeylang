@@ -32,6 +32,8 @@ pub enum TokenType {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
 
     // Keywords
     Function,
@@ -52,41 +54,43 @@ impl Display for TokenType {
 
             // Identifiers + literals
             TokenType::Ident => write!(f, "Ident"),
-            TokenType::Int => write!(f, "Int"),
+            TokenType::Int => write!(f, "int"),
+            TokenType::String => write!(f, "string"),
 
             // Operators
-            TokenType::Assign => write!(f, "Assign"),
-            TokenType::Plus => write!(f, "Plus"),
-            TokenType::Minus => write!(f, "Minus"),
-            TokenType::Bang => write!(f, "Bang"),
-            TokenType::Asterik => write!(f, "Asterik"),
-            TokenType::Slash => write!(f, "Slash"),
+            TokenType::Assign => write!(f, "="),
+            TokenType::Plus => write!(f, "+"),
+            TokenType::Minus => write!(f, "-"),
+            TokenType::Bang => write!(f, "!"),
+            TokenType::Asterik => write!(f, "*"),
+            TokenType::Slash => write!(f, "/"),
 
-            TokenType::Lt => write!(f, "Lt"),
-            TokenType::Gt => write!(f, "Gt"),
-            TokenType::LtEq => write!(f, "LtEq"),
-            TokenType::GtEq => write!(f, "GtEq"),
+            TokenType::Lt => write!(f, "<"),
+            TokenType::Gt => write!(f, ">"),
+            TokenType::LtEq => write!(f, "<="),
+            TokenType::GtEq => write!(f, ">="),
 
-            TokenType::Eq => write!(f, "Eq"),
-            TokenType::NotEq => write!(f, "NotEq"),
+            TokenType::Eq => write!(f, "=="),
+            TokenType::NotEq => write!(f, "!="),
 
-            TokenType::Comma => write!(f, "Comma"),
-            TokenType::Semicolon => write!(f, "Semicolon"),
+            TokenType::Comma => write!(f, ","),
+            TokenType::Semicolon => write!(f, ";"),
 
-            TokenType::LParen => write!(f, "LParen"),
-            TokenType::RParen => write!(f, "RParen"),
-            TokenType::LBrace => write!(f, "LBrace"),
-            TokenType::RBrace => write!(f, "RBrace"),
+            TokenType::LParen => write!(f, "("),
+            TokenType::RParen => write!(f, ")"),
+            TokenType::LBrace => write!(f, "{{"),
+            TokenType::RBrace => write!(f, "}}"),
+            TokenType::LBracket => write!(f, "["),
+            TokenType::RBracket => write!(f, "]"),
 
             // Keywords
-            TokenType::Function => write!(f, "Function"),
-            TokenType::Let => write!(f, "Let"),
-            TokenType::True => write!(f, "True"),
-            TokenType::False => write!(f, "False"),
-            TokenType::If => write!(f, "If"),
-            TokenType::Else => write!(f, "Else"),
-            TokenType::Return => write!(f, "Return"),
-            TokenType::String => write!(f, "String"),
+            TokenType::Function => write!(f, "fn"),
+            TokenType::Let => write!(f, "let"),
+            TokenType::True => write!(f, "true"),
+            TokenType::False => write!(f, "false"),
+            TokenType::If => write!(f, "if"),
+            TokenType::Else => write!(f, "else"),
+            TokenType::Return => write!(f, "return"),
         }
     }
 }

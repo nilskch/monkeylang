@@ -1,4 +1,5 @@
 pub mod builtin;
+mod error;
 
 use builtin::Builtin;
 

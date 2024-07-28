@@ -13,6 +13,7 @@ pub enum Expression {
     IfElse(IfExpression),
     Function(FunctionLiteral),
     Call(CallExpression),
+    Array(ArrayLiteral),
     Nil,
 }
 
@@ -28,6 +29,7 @@ impl Display for Expression {
             Expression::Function(func) => write!(f, "{}", func),
             Expression::Call(call_expr) => write!(f, "{}", call_expr),
             Expression::String(string) => write!(f, "{}", string),
+            Expression::Array(arr) => write!(f, "{}", arr),
             Expression::Nil => unreachable!(),
         }
     }
@@ -46,6 +48,7 @@ impl Expression {
             Expression::Function(func) => &func.token.literal,
             Expression::Call(call_expr) => &call_expr.token.literal,
             Expression::String(string) => &string.token.literal,
+            Expression::Array(arr) => &arr.token.literal,
             Expression::Nil => unreachable!(),
         }
     }
@@ -267,5 +270,30 @@ impl CallExpression {
             function: Box::new(function),
             arguments,
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct ArrayLiteral {
+    pub token: Token,
+    pub elements: Vec<Expression>,
+}
+
+impl Display for ArrayLiteral {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let elements: Vec<String> = self
+            .elements
+            .clone()
+            .into_iter()
+            .map(|elem| format!("{}", elem))
+            .collect();
+        let elements = elements.join(", ");
+        write!(f, "[{}]", elements)
+    }
+}
+
+impl ArrayLiteral {
+    pub fn new(token: Token, elements: Vec<Expression>) -> ArrayLiteral {
+        ArrayLiteral { token, elements }
     }
 }
