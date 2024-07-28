@@ -1,6 +1,7 @@
 pub mod environment;
 
 use crate::ast::{expression::Identifier, statement::BlockStatement};
+use crate::evaluator::builtin::Builtin;
 use environment::Env;
 use std::fmt::{Display, Formatter, Result};
 
@@ -11,6 +12,7 @@ pub const ERROR_OBJ: &str = "ERROR";
 pub const NULL_OBJ: &str = "NULL";
 pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub const STRING_OBJ: &str = "STRING";
+pub const BUILTIN_OBJ: &str = "BUILTIN";
 
 #[derive(Clone)]
 pub enum Object {
@@ -20,6 +22,7 @@ pub enum Object {
     Error(String),
     Function(Function),
     String(String),
+    Builtin(Builtin),
     Null,
 }
 
@@ -32,6 +35,7 @@ impl Display for Object {
             Object::Function(_) => write!(f, "TODO"),
             Object::Error(_) => write!(f, "TODO"),
             Object::String(_) => write!(f, "TODO"),
+            Object::Builtin(_) => write!(f, "TODO"),
             Object::Null => write!(f, "TODO"),
         }
     }
@@ -46,6 +50,7 @@ impl Object {
             Object::Function(_) => FUNCTION_OBJ,
             Object::Error(_) => ERROR_OBJ,
             Object::String(_) => STRING_OBJ,
+            Object::Builtin(_) => BUILTIN_OBJ,
             Object::Null => NULL_OBJ,
         }
     }
@@ -67,6 +72,7 @@ impl Object {
             }
             Object::String(value) => format!("{}", value),
             Object::Error(msg) => format!("ERROR: {}", msg),
+            Object::Builtin(_) => format!("builtin function"),
             Object::Null => String::from("null"),
         }
     }

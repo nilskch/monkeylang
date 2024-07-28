@@ -1,3 +1,7 @@
+pub mod builtin;
+
+use builtin::Builtin;
+
 use crate::ast::expression::{Expression, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
@@ -108,14 +112,15 @@ fn eval_expression(expr: Expression, env: &Env) -> Object {
 }
 
 fn apply_function(function: Object, args: Vec<Object>) -> Object {
-    let function = match function {
-        Object::Function(function) => function,
-        _ => return Object::Error(format!("not a function")),
-    };
-
-    let extended_env = extended_function_env(&function, args);
-    let evaluated = eval_block_statement(function.body, &extended_env);
-    unwrap_return_value(evaluated)
+    match function {
+        Object::Function(function) => {
+            let extended_env = extended_function_env(&function, args);
+            let evaluated = eval_block_statement(function.body, &extended_env);
+            unwrap_return_value(evaluated)
+        }
+        Object::Builtin(builtin) => builtin.apply_func(args),
+        _ => Object::Error(format!("not a function: {}", function.object_type())),
+    }
 }
 
 fn unwrap_return_value(obj: Object) -> Object {
@@ -150,8 +155,11 @@ fn eval_expressions(exprs: Vec<Expression>, env: &Env) -> Vec<Object> {
 }
 
 fn eval_identifier(ident: Identifier, env: &Env) -> Object {
-    match env.borrow().get(&ident.value) {
-        Some(value) => value,
+    if let Some(value) = env.borrow().get(&ident.value) {
+        return value;
+    }
+    match Builtin::lookup(&ident.value) {
+        Some(builtin) => builtin,
         None => Object::Error(format!("identifier not found: {}", ident.value)),
     }
 }
@@ -320,6 +328,11 @@ mod tests {
         parser::Parser,
     };
     use std::cell::RefCell;
+
+    enum ExpectedValue {
+        Integer(i64),
+        String(String),
+    }
 
     #[test]
     fn test_eval_integer_expression() {
@@ -632,5 +645,40 @@ mod tests {
             "String has the wrong value. expected='{}'. got='{}'",
             expected, string_literal
         );
+    }
+
+    #[test]
+    fn test_builtin_functions() {
+        let tests = [
+            ("len(\"\")", ExpectedValue::Integer(0)),
+            ("len(\"four\")", ExpectedValue::Integer(4)),
+            ("len(\"hello world\")", ExpectedValue::Integer(11)),
+            (
+                "len(1)",
+                ExpectedValue::String(String::from("argument to `len` not supported, got INTEGER")),
+            ),
+            (
+                "len(\"one\", \"two\")",
+                ExpectedValue::String(String::from("wrong number of arguments. got=2. want=1")),
+            ),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            match expected {
+                ExpectedValue::Integer(val) => test_integer_object(evaluated, val),
+                ExpectedValue::String(val) => {
+                    let err_msg = match evaluated {
+                        Object::Error(err_msg) => err_msg,
+                        _ => unreachable!(),
+                    };
+                    assert_eq!(
+                        err_msg, val,
+                        "wrong error message. want='{}'. got='{}'",
+                        val, err_msg
+                    );
+                }
+            }
+        }
     }
 }
