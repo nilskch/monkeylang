@@ -11,6 +11,7 @@ pub enum Precedence {
     Product,     // *
     Prefix,      // -X or !X
     Object,      // myFunction(X)
+    Index,
 }
 
 lazy_static! {
@@ -27,6 +28,7 @@ lazy_static! {
         m.insert(TokenType::Slash, Precedence::Product);
         m.insert(TokenType::Asterik, Precedence::Product);
         m.insert(TokenType::LParen, Precedence::Object);
+        m.insert(TokenType::LBracket, Precedence::Index);
         m
     };
 }

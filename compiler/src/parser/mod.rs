@@ -5,7 +5,7 @@ use precedence::PRECEDENCES;
 use self::precedence::Precedence;
 use crate::ast::expression::{
     ArrayLiteral, BooleanLiteral, CallExpression, Expression, FunctionLiteral, Identifier,
-    IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
+    IfExpression, Index, InfixExpression, IntegerLiteral, PrefixExpression, StringLiteral,
 };
 use crate::ast::program::Program;
 use crate::ast::statement::{
@@ -115,11 +115,27 @@ impl Parser {
                     self.next_token();
                     self.parse_call_expression(left_expr)
                 }
+                TokenType::LBracket => {
+                    self.next_token();
+                    self.parse_index_expression(left_expr)
+                }
                 _ => return left_expr,
             };
         }
 
         left_expr
+    }
+
+    fn parse_index_expression(&mut self, left: Expression) -> Expression {
+        let token = self.cur_token.clone();
+        self.next_token();
+        let index = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_peek(&TokenType::RBracket) {
+            Expression::Nil
+        } else {
+            Expression::Index(Index::new(token, left, index))
+        }
     }
 
     fn parse_array_literal(&mut self) -> Expression {
@@ -819,6 +835,14 @@ mod tests {
                 "add(a + b + c * d / f + g)",
                 "add((((a + b) + ((c * d) / f)) + g))",
             ),
+            (
+                "a * [1, 2, 3, 4][b * c] * d",
+                "((a * ([1, 2, 3, 4][(b * c)])) * d)",
+            ),
+            (
+                "add(a * b[2], b[1], 2 * [1, 2][1])",
+                "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+            ),
         ];
 
         for (input, expected) in tests {
@@ -1205,6 +1229,34 @@ mod tests {
             ExpectedValue::Integer(3),
             "+",
             ExpectedValue::Integer(3),
+        );
+    }
+
+    #[test]
+    fn test_parsing_index_expressions() {
+        let input = "myArray[1 + 1]";
+        let lexer = Lexer::new(input.to_string());
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        check_parser_errors(parser);
+
+        let stmt = &program.statements[0];
+        let expr_stmt = match stmt {
+            Statement::Expr(stmt) => stmt,
+            _ => unreachable!(),
+        };
+
+        let index_expr = match &expr_stmt.expression {
+            Expression::Index(index) => index,
+            _ => unreachable!(),
+        };
+
+        test_identifier(&index_expr.left, String::from("myArray"));
+        test_infix_expression(
+            &index_expr.index,
+            ExpectedValue::Integer(1),
+            "+",
+            ExpectedValue::Integer(1),
         );
     }
 }

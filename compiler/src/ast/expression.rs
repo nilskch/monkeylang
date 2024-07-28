@@ -14,6 +14,7 @@ pub enum Expression {
     Function(FunctionLiteral),
     Call(CallExpression),
     Array(ArrayLiteral),
+    Index(Index),
     Nil,
 }
 
@@ -30,6 +31,7 @@ impl Display for Expression {
             Expression::Call(call_expr) => write!(f, "{}", call_expr),
             Expression::String(string) => write!(f, "{}", string),
             Expression::Array(arr) => write!(f, "{}", arr),
+            Expression::Index(index) => write!(f, "{}", index),
             Expression::Nil => unreachable!(),
         }
     }
@@ -49,6 +51,7 @@ impl Expression {
             Expression::Call(call_expr) => &call_expr.token.literal,
             Expression::String(string) => &string.token.literal,
             Expression::Array(arr) => &arr.token.literal,
+            Expression::Index(index) => &index.token.literal,
             Expression::Nil => unreachable!(),
         }
     }
@@ -295,5 +298,28 @@ impl Display for ArrayLiteral {
 impl ArrayLiteral {
     pub fn new(token: Token, elements: Vec<Expression>) -> ArrayLiteral {
         ArrayLiteral { token, elements }
+    }
+}
+
+#[derive(Clone)]
+pub struct Index {
+    pub token: Token,
+    pub left: Box<Expression>,
+    pub index: Box<Expression>,
+}
+
+impl Display for Index {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "({}[{}])", self.left, self.index)
+    }
+}
+
+impl Index {
+    pub fn new(token: Token, left: Expression, index: Expression) -> Index {
+        Index {
+            token,
+            left: Box::new(left),
+            index: Box::new(index),
+        }
     }
 }
