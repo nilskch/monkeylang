@@ -8,7 +8,7 @@ use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::{Env, Environment};
 use crate::object::{
-    Function, Object, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ, STRING_OBJ,
+    Function, Object, ARRAY_OBJ, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ, STRING_OBJ,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -115,7 +115,49 @@ fn eval_expression(expr: Expression, env: &Env) -> Object {
             }
             Object::Array(elements)
         }
+        Expression::Index(index) => {
+            let left = eval_expression(*index.left, env);
+            if is_error(&left) {
+                return left;
+            }
+            let index = eval_expression(*index.index, env);
+            if is_error(&index) {
+                return index;
+            }
+            eval_index_expression(left, index)
+        }
         _ => Object::Null,
+    }
+}
+
+fn eval_index_expression(left: Object, index: Object) -> Object {
+    if left.object_type() == ARRAY_OBJ && index.object_type() == INTEGER_OBJ {
+        eval_array_index_expression(left, index)
+    } else {
+        Object::Error(format!(
+            "index operator not supported: {}",
+            left.object_type()
+        ))
+    }
+}
+
+fn eval_array_index_expression(array: Object, index: Object) -> Object {
+    let array = match array {
+        Object::Array(array) => array,
+        _ => unreachable!(),
+    };
+    let index = match index {
+        Object::Integer(val) => val,
+        _ => unreachable!(),
+    };
+    let max = (array.len() - 1) as i64;
+
+    if index < 0 || index > max {
+        // this is a language design decision: we don't want to
+        // throw an out of bounce error, but return null
+        Object::Null
+    } else {
+        array[index as usize].clone()
     }
 }
 
@@ -340,6 +382,7 @@ mod tests {
     enum ExpectedValue {
         Integer(i64),
         String(String),
+        Null,
     }
 
     #[test]
@@ -686,6 +729,7 @@ mod tests {
                         val, err_msg
                     );
                 }
+                _ => unreachable!(),
             }
         }
     }
@@ -709,5 +753,46 @@ mod tests {
         test_integer_object(&arr[0], 1);
         test_integer_object(&arr[1], 4);
         test_integer_object(&arr[2], 6);
+    }
+
+    #[test]
+    fn test_array_index_expressions() {
+        let tests = [
+            ("[1, 2, 3][0]", ExpectedValue::Integer(1)),
+            ("[1, 2, 3][1]", ExpectedValue::Integer(2)),
+            ("[1, 2, 3][2]", ExpectedValue::Integer(3)),
+            ("let i = 0; [1][i];", ExpectedValue::Integer(1)),
+            ("[1, 2, 3][1 + 1]", ExpectedValue::Integer(3)),
+            (
+                "let myArray = [1, 2, 3]; myArray[2];",
+                ExpectedValue::Integer(3),
+            ),
+            (
+                "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+                ExpectedValue::Integer(6),
+            ),
+            (
+                "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
+                ExpectedValue::Integer(2),
+            ),
+            ("[1, 2, 3][3]", ExpectedValue::Null),
+            ("[1, 2, 3][-1]", ExpectedValue::Null),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+
+            match expected {
+                ExpectedValue::Integer(val) => test_integer_object(&evaluated, val),
+                ExpectedValue::Null => match evaluated {
+                    Object::Null => continue,
+                    _ => panic!(
+                        "Wrong evaluation. expected=NULL. got={}",
+                        evaluated.object_type()
+                    ),
+                },
+                _ => continue,
+            }
+        }
     }
 }
