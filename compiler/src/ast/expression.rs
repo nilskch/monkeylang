@@ -358,11 +358,9 @@ impl HashLiteral {
 
 impl Hash for HashLiteral {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        // let hasher = self.map.hasher();
-        // let hash = hasher.finish();
-        // state.write_i64(hash);
-        for (key, _) in self.pairs.iter() {
-            key.hash(state)
+        for (key, value) in self.pairs.iter() {
+            key.hash(state);
+            value.hash(state);
         }
     }
 }
