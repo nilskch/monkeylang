@@ -108,6 +108,13 @@ fn eval_expression(expr: Expression, env: &Env) -> Object {
             apply_function(function, args)
         }
         Expression::String(string_literal) => Object::String(string_literal.value),
+        Expression::Array(arr) => {
+            let elements = eval_expressions(arr.elements, env);
+            if elements.len() == 1 && is_error(&elements[0]) {
+                return elements[0].clone();
+            }
+            Object::Array(elements)
+        }
         _ => Object::Null,
     }
 }
@@ -357,7 +364,7 @@ mod tests {
 
         for (input, expected) in tests {
             let evaluated = test_eval(input);
-            test_integer_object(evaluated, expected);
+            test_integer_object(&evaluated, expected);
         }
     }
 
@@ -370,8 +377,8 @@ mod tests {
         eval_program(program, env)
     }
 
-    fn test_integer_object(object: Object, expected: i64) {
-        let integer_value = match object {
+    fn test_integer_object(object: &Object, expected: i64) {
+        let integer_value = match *object {
             Object::Integer(integer_value) => integer_value,
             _ => unreachable!(),
         };
@@ -474,7 +481,7 @@ mod tests {
         );
 
         match expected {
-            Object::Integer(value) => test_integer_object(object, value),
+            Object::Integer(value) => test_integer_object(&object, value),
             Object::Null => test_null_object(object),
             _ => unreachable!(),
         }
@@ -511,7 +518,7 @@ mod tests {
 
         for (input, expected) in tests {
             let evaluated = test_eval(input);
-            test_integer_object(evaluated, expected);
+            test_integer_object(&evaluated, expected);
         }
     }
 
@@ -558,7 +565,7 @@ mod tests {
 
         for (input, expected) in tests {
             let evaluated = test_eval(input);
-            test_integer_object(evaluated, expected);
+            test_integer_object(&evaluated, expected);
         }
     }
 
@@ -608,7 +615,7 @@ mod tests {
         ];
 
         for (input, expected) in tests {
-            test_integer_object(test_eval(input), expected);
+            test_integer_object(&test_eval(input), expected);
         }
     }
 
@@ -667,7 +674,7 @@ mod tests {
         for (input, expected) in tests {
             let evaluated = test_eval(input);
             match expected {
-                ExpectedValue::Integer(val) => test_integer_object(evaluated, val),
+                ExpectedValue::Integer(val) => test_integer_object(&evaluated, val),
                 ExpectedValue::String(val) => {
                     let err_msg = match evaluated {
                         Object::Error(err_msg) => err_msg,
@@ -681,5 +688,26 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_array_literals() {
+        let input = "[1, 2 * 2, 3 + 3]";
+        let evaluated = test_eval(input);
+
+        let arr = match evaluated {
+            Object::Array(arr) => arr,
+            _ => unreachable!(),
+        };
+
+        assert_eq!(
+            arr.len(),
+            3,
+            "array has wrong number of elements. want=3. got={}",
+            arr.len()
+        );
+        test_integer_object(&arr[0], 1);
+        test_integer_object(&arr[1], 4);
+        test_integer_object(&arr[2], 6);
     }
 }

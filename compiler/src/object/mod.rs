@@ -13,6 +13,7 @@ pub const NULL_OBJ: &str = "NULL";
 pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub const STRING_OBJ: &str = "STRING";
 pub const BUILTIN_OBJ: &str = "BUILTIN";
+pub const ARRAY_OBJ: &str = "ARRAY";
 
 #[derive(Clone)]
 pub enum Object {
@@ -23,6 +24,7 @@ pub enum Object {
     Function(Function),
     String(String),
     Builtin(Builtin),
+    Array(Vec<Object>),
     Null,
 }
 
@@ -36,6 +38,7 @@ impl Display for Object {
             Object::Error(_) => write!(f, "TODO"),
             Object::String(_) => write!(f, "TODO"),
             Object::Builtin(_) => write!(f, "TODO"),
+            Object::Array(_) => write!(f, "TODO"),
             Object::Null => write!(f, "TODO"),
         }
     }
@@ -51,6 +54,7 @@ impl Object {
             Object::Error(_) => ERROR_OBJ,
             Object::String(_) => STRING_OBJ,
             Object::Builtin(_) => BUILTIN_OBJ,
+            Object::Array(_) => ARRAY_OBJ,
             Object::Null => NULL_OBJ,
         }
     }
@@ -73,6 +77,12 @@ impl Object {
             Object::String(value) => format!("{}", value),
             Object::Error(msg) => format!("ERROR: {}", msg),
             Object::Builtin(_) => format!("builtin function"),
+            Object::Array(arr) => {
+                let elements: Vec<String> =
+                    arr.into_iter().map(|elem| format!("{}", elem)).collect();
+                let elements = elements.join(", ");
+                format!("[{}]", elements)
+            }
             Object::Null => String::from("null"),
         }
     }
