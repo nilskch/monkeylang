@@ -10,7 +10,6 @@ use std::hash::{Hash, Hasher};
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";
 pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
-pub const ERROR_OBJ: &str = "ERROR";
 pub const NULL_OBJ: &str = "NULL";
 pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub const STRING_OBJ: &str = "STRING";
@@ -23,7 +22,6 @@ pub enum Object {
     Integer(i64),
     Boolean(bool),
     ReturnValue(Box<Object>),
-    Error(String),
     Function(Function),
     String(String),
     Builtin(Builtin),
@@ -39,7 +37,6 @@ impl Display for Object {
             Object::Boolean(val) => write!(f, "{}", val),
             Object::ReturnValue(val) => write!(f, "{}", val),
             Object::Function(val) => write!(f, "{}", val),
-            Object::Error(val) => write!(f, "{}", val),
             Object::String(val) => write!(f, "{}", val),
             Object::Builtin(val) => write!(f, "{}", val),
             Object::Array(elements) => {
@@ -72,7 +69,6 @@ impl Object {
             Object::Integer(_) => INTEGER_OBJ,
             Object::ReturnValue(_) => RETURN_VALUE_OBJ,
             Object::Function(_) => FUNCTION_OBJ,
-            Object::Error(_) => ERROR_OBJ,
             Object::String(_) => STRING_OBJ,
             Object::Builtin(_) => BUILTIN_OBJ,
             Object::Array(_) => ARRAY_OBJ,
@@ -97,7 +93,6 @@ impl Object {
                 format!("fn({}) {{\n{}\n}}", params, function.body)
             }
             Object::String(value) => format!("{}", value),
-            Object::Error(msg) => format!("ERROR: {}", msg),
             Object::Builtin(_) => format!("builtin function"),
             Object::Array(arr) => format!("{}", Object::Array(arr.clone())),
             Object::Hash(hash) => format!("{}", Object::Hash(hash.clone())),
