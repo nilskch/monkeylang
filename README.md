@@ -4,10 +4,32 @@ This is a Rust implementation of the Monkey programming language created by [Tho
 This is a fun learning project to understand more about interpreters and compilers and to learn Rust.
 
 ## Playground
-I created a wasm based playground for the Monkey language. Test it out [here](https://google.com).
+Run monkey code and discover all language features online in the [wasm based playground](https://nilskch.github.io/monkeylang).
+There are plenty examples that showcase all language features.
 
 ## CLI
 You can use the monkey CLI to run monkey code locally. You can install it using cargo.
+
+### Install
+Install the monkey cli with cargo:
+```
+$ cargo install TODO
+```
+
+### Usage
+Start the monkey repl:
+```
+$ monkey
+Welcome to the Monkey Programming Language!
+>> print("Hello World")
+"Hello World"
+>>
+```
+
+Run monkey code:
+```
+$ monkey run main.mky
+```
 
 ## Resources
 - The book "[Writing An Interpreter In Go](https://interpreterbook.com/)" by [Thorsten Ball](https://github.com/mrnugget)
