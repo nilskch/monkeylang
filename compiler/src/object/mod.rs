@@ -72,20 +72,11 @@ impl Object {
             Object::Boolean(value) => format!("{}", value),
             Object::Integer(value) => format!("{}", value),
             Object::ReturnValue(value) => format!("{}", value),
-            Object::Function(function) => {
-                let params: Vec<String> = function
-                    .parameters
-                    .clone()
-                    .into_iter()
-                    .map(|param| format!("{}", param))
-                    .collect();
-                let params = params.join(", ");
-                format!("fn({}) {{\n{}\n}}", params, function.body)
-            }
+            Object::Function(function) => format!("{}", function),
             Object::String(value) => format!("{}", value),
-            Object::Builtin(_) => format!("builtin function"),
             Object::Array(arr) => format!("{}", Object::Array(arr.clone())),
             Object::Hash(hash) => format!("{}", Object::Hash(hash.clone())),
+            Object::Builtin(_) => format!("builtin function"),
             Object::Null => String::from("null"),
         }
     }
