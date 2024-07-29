@@ -58,7 +58,6 @@ fn eval_statement(stmt: Statement, env: &Env) -> EvaluationResult {
             env.borrow_mut().set(let_stmt.name.value.to_string(), value);
             Ok(Object::Null)
         }
-        _ => Ok(Object::Null),
     }
 }
 
@@ -98,7 +97,6 @@ fn eval_expression(expr: Expression, env: &Env) -> EvaluationResult {
             eval_index_expression(left, index)
         }
         Expression::Hash(hash_literal) => eval_hash_literal(hash_literal, env),
-        _ => Ok(Object::Null),
     }
 }
 
@@ -401,7 +399,10 @@ mod tests {
     fn test_eval(input: &str) -> EvaluationResult {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = match parser.parse_program() {
+            Ok(program) => program,
+            Err(err) => panic!("{}", err),
+        };
         let env = &Rc::from(RefCell::from(Environment::new()));
 
         eval_program(program, env)

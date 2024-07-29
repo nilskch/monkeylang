@@ -25,26 +25,21 @@ pub fn start() {
 
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
 
-        if parser.errors.len() != 0 {
-            print_parser_errors(parser.errors);
-            continue;
-        }
+        let program = match parser.parse_program() {
+            Ok(program) => program,
+            Err(err) => {
+                println!("{}", err);
+                continue;
+            }
+        };
 
-        let evaluated = eval_program(program, env);
-        match evaluated {
+        match eval_program(program, env) {
             Ok(result) => match result {
                 Object::Null => continue,
                 _ => println!("{}", result.inspect()),
             },
             Err(err) => println!("{}", err),
         }
-    }
-}
-
-fn print_parser_errors(errors: Vec<String>) {
-    for error in errors {
-        println!("{}", error);
     }
 }

@@ -20,7 +20,6 @@ pub enum Expression {
     Array(ArrayLiteral),
     Index(Index),
     Hash(HashLiteral),
-    Null,
 }
 
 impl Display for Expression {
@@ -38,7 +37,6 @@ impl Display for Expression {
             Expression::Array(arr) => write!(f, "{}", arr),
             Expression::Index(index) => write!(f, "{}", index),
             Expression::Hash(hash_literal) => write!(f, "{}", hash_literal),
-            Expression::Null => unreachable!(),
         }
     }
 }
@@ -59,7 +57,6 @@ impl Expression {
             Expression::Array(arr) => &arr.token.literal,
             Expression::Index(index) => &index.token.literal,
             Expression::Hash(hash_literal) => &hash_literal.token.literal,
-            Expression::Null => unreachable!(),
         }
     }
 }

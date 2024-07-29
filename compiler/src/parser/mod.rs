@@ -1,5 +1,7 @@
+mod error;
 mod precedence;
 
+use error::ParserError;
 use precedence::Precedence;
 
 use crate::ast::expression::{
@@ -37,7 +39,7 @@ impl Parser {
         self.peek_token = self.lexer.next_token();
     }
 
-    pub fn parse_program(&mut self) -> Program {
+    pub fn parse_program(&mut self) -> Result<Program, ParserError> {
         let mut program = Program::new();
 
         while self.cur_token.token_type != TokenType::Eof {
@@ -47,26 +49,26 @@ impl Parser {
             self.next_token();
         }
 
-        program
+        Ok(program)
     }
 
-    fn parse_statement(&mut self) -> Result<Statement, ()> {
+    fn parse_statement(&mut self) -> Result<Statement, ParserError> {
         match self.cur_token.token_type {
-            TokenType::Let => Ok(self.parse_let_statement()),
-            TokenType::Return => Ok(self.parse_return_statement()),
-            _ => Ok(self.parse_expression_statement()),
+            TokenType::Let => self.parse_let_statement(),
+            TokenType::Return => self.parse_return_statement(),
+            _ => self.parse_expression_statement(),
         }
     }
 
-    fn parse_expression_statement(&mut self) -> Statement {
+    fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
         let token = self.cur_token.clone();
-        let expression = self.parse_expression(Precedence::Lowest);
+        let expression = self.parse_expression(Precedence::Lowest)?;
 
         if self.peek_token_is(&TokenType::Semicolon) {
             self.next_token();
         }
 
-        Statement::Expr(ExpressionStatement::new(token, expression))
+        Ok(Statement::Expr(ExpressionStatement::new(token, expression)))
     }
 
     fn parse_boolean_expression(&self) -> Expression {
@@ -76,26 +78,28 @@ impl Parser {
         ))
     }
 
-    fn parse_expression(&mut self, precedence: Precedence) -> Expression {
+    fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression, ParserError> {
         let mut left_expr = match self.cur_token.token_type {
             TokenType::Ident => self.parse_identifier(),
-            TokenType::Int => self.parse_integer_literal(),
-            TokenType::Bang | TokenType::Minus => self.parse_prefix_expression(),
+            TokenType::Int => self.parse_integer_literal()?,
+            TokenType::Bang | TokenType::Minus => self.parse_prefix_expression()?,
             TokenType::True | TokenType::False => self.parse_boolean_expression(),
-            TokenType::LParen => self.parse_grouped_expression(),
-            TokenType::If => self.parse_if_expression(),
-            TokenType::Function => self.parse_function_literal(),
+            TokenType::LParen => self.parse_grouped_expression()?,
+            TokenType::If => self.parse_if_expression()?,
+            TokenType::Function => self.parse_function_literal()?,
             TokenType::String => self.parse_string_literal(),
-            TokenType::LBracket => self.parse_array_literal(),
-            TokenType::LBrace => self.parse_hash_literal(),
+            TokenType::LBracket => self.parse_array_literal()?,
+            TokenType::LBrace => self.parse_hash_literal()?,
             _ => {
-                self.no_prefix_parse_fn_error(self.cur_token.token_type.clone());
-                return Expression::Null;
+                return Err(ParserError::new(format!(
+                    "no prefix parse function for {} found",
+                    self.cur_token.token_type.clone()
+                )))
             }
         };
 
         if self.peek_token_is(&TokenType::Semicolon) || precedence >= self.peek_precedence() {
-            return left_expr;
+            return Ok(left_expr);
         }
 
         while !self.peek_token_is(&TokenType::Semicolon) && precedence < self.peek_precedence() {
@@ -111,93 +115,81 @@ impl Parser {
                 | TokenType::LtEq
                 | TokenType::GtEq => {
                     self.next_token();
-                    self.parse_infix_expression(left_expr)
+                    self.parse_infix_expression(left_expr)?
                 }
                 TokenType::LParen => {
                     self.next_token();
-                    self.parse_call_expression(left_expr)
+                    self.parse_call_expression(left_expr)?
                 }
                 TokenType::LBracket => {
                     self.next_token();
-                    self.parse_index_expression(left_expr)
+                    self.parse_index_expression(left_expr)?
                 }
-                _ => return left_expr,
+                _ => return Ok(left_expr),
             };
         }
 
-        left_expr
+        Ok(left_expr)
     }
 
-    fn parse_hash_literal(&mut self) -> Expression {
+    fn parse_hash_literal(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         let mut pairs = HashMap::new();
 
         while !self.peek_token_is(&TokenType::RBrace) {
             self.next_token();
-            let key = self.parse_expression(Precedence::Lowest);
+            let key = self.parse_expression(Precedence::Lowest)?;
 
-            if !self.expect_peek(&TokenType::Colon) {
-                return Expression::Null;
-            }
+            self.expect_peek(&TokenType::Colon)?;
 
             self.next_token();
-            let value = self.parse_expression(Precedence::Lowest);
+            let value = self.parse_expression(Precedence::Lowest)?;
             pairs.insert(key, value);
 
-            if !self.peek_token_is(&TokenType::RBrace) && !self.expect_peek(&TokenType::Comma) {
-                return Expression::Null;
+            if !self.peek_token_is(&TokenType::RBrace) {
+                self.expect_peek(&TokenType::Comma)?;
             }
         }
 
-        if !self.expect_peek(&TokenType::RBrace) {
-            return Expression::Null;
-        }
+        self.expect_peek(&TokenType::RBrace)?;
 
-        Expression::Hash(HashLiteral::new(token, pairs))
+        Ok(Expression::Hash(HashLiteral::new(token, pairs)))
     }
 
-    fn parse_index_expression(&mut self, left: Expression) -> Expression {
+    fn parse_index_expression(&mut self, left: Expression) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         self.next_token();
-        let index = self.parse_expression(Precedence::Lowest);
+        let index = self.parse_expression(Precedence::Lowest)?;
 
-        if !self.expect_peek(&TokenType::RBracket) {
-            Expression::Null
-        } else {
-            Expression::Index(Index::new(token, left, index))
-        }
+        self.expect_peek(&TokenType::RBracket)?;
+        Ok(Expression::Index(Index::new(token, left, index)))
     }
 
-    fn parse_array_literal(&mut self) -> Expression {
+    fn parse_array_literal(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
-        let elements = match self.parse_expression_list(&TokenType::RBracket) {
-            Some(elements) => elements,
-            None => return Expression::Null,
-        };
-        Expression::Array(ArrayLiteral::new(token, elements))
+        let elements = self.parse_expression_list(&TokenType::RBracket)?;
+        Ok(Expression::Array(ArrayLiteral::new(token, elements)))
     }
 
-    fn parse_expression_list(&mut self, end: &TokenType) -> Option<Vec<Expression>> {
+    fn parse_expression_list(&mut self, end: &TokenType) -> Result<Vec<Expression>, ParserError> {
         let mut expressions = vec![];
         if self.peek_token_is(end) {
             self.next_token();
-            return Some(expressions);
+            return Ok(expressions);
         }
 
         self.next_token();
-        expressions.push(self.parse_expression(Precedence::Lowest));
+        expressions.push(self.parse_expression(Precedence::Lowest)?);
 
         while self.peek_token_is(&TokenType::Comma) {
             self.next_token();
             self.next_token();
-            expressions.push(self.parse_expression(Precedence::Lowest));
+            expressions.push(self.parse_expression(Precedence::Lowest)?);
         }
 
-        if !self.expect_peek(end) {
-            return None;
-        }
+        self.expect_peek(end)?;
 
-        Some(expressions)
+        Ok(expressions)
     }
 
     fn parse_string_literal(&self) -> Expression {
@@ -213,53 +205,54 @@ impl Parser {
         Expression::Ident(Identifier::new(token, literal))
     }
 
-    fn parse_integer_literal(&mut self) -> Expression {
+    fn parse_integer_literal(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         let value = match token.literal.parse::<i64>() {
             Ok(value) => value,
             Err(_) => {
-                let msg = format!("could not parse '{}' to integer", token.literal);
-                self.errors.push(msg);
-                return Expression::Null;
+                return Err(ParserError::new(format!(
+                    "could not parse '{}' to integer",
+                    token.literal
+                )))
             }
         };
 
-        Expression::Integer(IntegerLiteral::new(token, value))
+        Ok(Expression::Integer(IntegerLiteral::new(token, value)))
     }
 
-    fn parse_prefix_expression(&mut self) -> Expression {
+    fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         let operator = self.cur_token.literal.clone();
 
         self.next_token();
 
-        let right_expression = self.parse_expression(Precedence::Prefix);
+        let right_expression = self.parse_expression(Precedence::Prefix)?;
 
-        Expression::Prefix(PrefixExpression::new(token, operator, right_expression))
+        Ok(Expression::Prefix(PrefixExpression::new(
+            token,
+            operator,
+            right_expression,
+        )))
     }
 
-    fn parse_let_statement(&mut self) -> Statement {
+    fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(&TokenType::Ident) {
-            return Statement::Nil;
-        }
+        self.expect_peek(&TokenType::Ident)?;
 
         let name = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
 
-        if !self.expect_peek(&TokenType::Assign) {
-            return Statement::Nil;
-        }
+        self.expect_peek(&TokenType::Assign)?;
 
         self.next_token();
 
-        let value = self.parse_expression(Precedence::Lowest);
+        let value = self.parse_expression(Precedence::Lowest)?;
 
         if !self.cur_token_is(TokenType::Semicolon) {
             self.next_token()
         }
 
-        Statement::Let(LetStatement::new(token, name, value))
+        Ok(Statement::Let(LetStatement::new(token, name, value)))
     }
 
     fn cur_token_is(&self, token_type: TokenType) -> bool {
@@ -270,41 +263,30 @@ impl Parser {
         self.peek_token.token_type == *token_type
     }
 
-    fn expect_peek(&mut self, token_type: &TokenType) -> bool {
+    fn expect_peek(&mut self, token_type: &TokenType) -> Result<(), ParserError> {
         if self.peek_token_is(token_type) {
             self.next_token();
-            true
+            Ok(())
         } else {
-            self.peek_error(token_type);
-            false
+            Err(ParserError::new(format!(
+                "expected next token to be '{}', but got '{}' instead",
+                token_type, self.peek_token.token_type
+            )))
         }
     }
 
-    fn peek_error(&mut self, token_type: &TokenType) {
-        let msg = format!(
-            "expected next token to be '{}', but got '{}' instead",
-            token_type, self.peek_token.token_type
-        );
-        self.errors.push(msg);
-    }
-
-    fn parse_return_statement(&mut self) -> Statement {
+    fn parse_return_statement(&mut self) -> Result<Statement, ParserError> {
         let token = self.cur_token.clone();
 
         self.next_token();
-        let return_value = self.parse_expression(Precedence::Lowest);
+        let return_value = self.parse_expression(Precedence::Lowest)?;
 
         if self.peek_token_is(&TokenType::Semicolon) {
             self.next_token();
         }
 
         let return_stmt = ReturnStatement::new(token, return_value);
-        Statement::Return(return_stmt)
-    }
-
-    fn no_prefix_parse_fn_error(&mut self, token_type: TokenType) {
-        let msg = format!("no prefix parse function for {} found", token_type);
-        self.errors.push(msg);
+        Ok(Statement::Return(return_stmt))
     }
 
     fn peek_precedence(&self) -> Precedence {
@@ -321,70 +303,58 @@ impl Parser {
         }
     }
 
-    fn parse_infix_expression(&mut self, left: Expression) -> Expression {
+    fn parse_infix_expression(&mut self, left: Expression) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         let operator = self.cur_token.literal.clone();
         let prec = self.cur_precedence();
 
         self.next_token();
 
-        let right = self.parse_expression(prec);
-        Expression::Infix(InfixExpression::new(token, left, operator, right))
+        let right = self.parse_expression(prec)?;
+        Ok(Expression::Infix(InfixExpression::new(
+            token, left, operator, right,
+        )))
     }
 
-    fn parse_grouped_expression(&mut self) -> Expression {
+    fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
         self.next_token();
         let expr = self.parse_expression(Precedence::Lowest);
 
-        if !self.expect_peek(&TokenType::RParen) {
-            Expression::Null
-        } else {
-            expr
-        }
+        self.expect_peek(&TokenType::RParen)?;
+        expr
     }
 
-    fn parse_if_expression(&mut self) -> Expression {
+    fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(&TokenType::LParen) {
-            return Expression::Null;
-        }
-
+        self.expect_peek(&TokenType::LParen)?;
         self.next_token();
 
-        let condition = self.parse_expression(Precedence::Lowest);
+        let condition = self.parse_expression(Precedence::Lowest)?;
 
-        if !self.expect_peek(&TokenType::RParen) {
-            return Expression::Null;
-        }
+        self.expect_peek(&TokenType::RParen)?;
 
-        if !self.expect_peek(&TokenType::LBrace) {
-            return Expression::Null;
-        }
+        self.expect_peek(&TokenType::LBrace)?;
 
-        let consequence = self.parse_block_statement();
+        let consequence = self.parse_block_statement()?;
 
         let alternative = if self.peek_token_is(&TokenType::Else) {
             self.next_token();
-
-            if !self.expect_peek(&TokenType::LBrace) {
-                None
-            } else {
-                Some(self.parse_block_statement())
-            }
+            self.expect_peek(&TokenType::LBrace)?;
+            Some(self.parse_block_statement()?)
         } else {
             None
         };
 
-        Expression::IfElse(IfExpression::new(
+        Ok(Expression::IfElse(IfExpression::new(
             token,
             condition,
             consequence,
             alternative,
-        ))
+        )))
     }
 
-    fn parse_block_statement(&mut self) -> BlockStatement {
+    fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
         let token = self.cur_token.clone();
         let mut statements = vec![];
 
@@ -398,33 +368,31 @@ impl Parser {
             self.next_token();
         }
 
-        BlockStatement::new(token, statements)
+        Ok(BlockStatement::new(token, statements))
     }
 
-    fn parse_function_literal(&mut self) -> Expression {
+    fn parse_function_literal(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
 
-        if !self.expect_peek(&TokenType::LParen) {
-            return Expression::Null;
-        }
+        self.expect_peek(&TokenType::LParen)?;
 
-        let parameters = self.parse_function_parameters();
+        let parameters = self.parse_function_parameters()?;
 
-        if !self.expect_peek(&TokenType::LBrace) {
-            return Expression::Null;
-        }
+        self.expect_peek(&TokenType::LBrace)?;
 
-        let body = self.parse_block_statement();
+        let body = self.parse_block_statement()?;
 
-        Expression::Function(FunctionLiteral::new(token, parameters, body))
+        Ok(Expression::Function(FunctionLiteral::new(
+            token, parameters, body,
+        )))
     }
 
-    fn parse_function_parameters(&mut self) -> Vec<Identifier> {
+    fn parse_function_parameters(&mut self) -> Result<Vec<Identifier>, ParserError> {
         let mut identifiers = vec![];
 
         if self.peek_token_is(&TokenType::RParen) {
             self.next_token();
-            return identifiers;
+            return Ok(identifiers);
         }
 
         self.next_token();
@@ -440,21 +408,18 @@ impl Parser {
             identifiers.push(ident);
         }
 
-        if !self.expect_peek(&TokenType::RParen) {
-            return vec![];
-        }
+        self.expect_peek(&TokenType::RParen)?;
 
-        identifiers
+        Ok(identifiers)
     }
 
-    fn parse_call_expression(&mut self, function: Expression) -> Expression {
+    fn parse_call_expression(&mut self, function: Expression) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
-        let arguments = match self.parse_expression_list(&TokenType::RParen) {
-            Some(arguments) => arguments,
-            None => return Expression::Null,
-        };
+        let arguments = self.parse_expression_list(&TokenType::RParen)?;
 
-        Expression::Call(CallExpression::new(token, function, arguments))
+        Ok(Expression::Call(CallExpression::new(
+            token, function, arguments,
+        )))
     }
 }
 
@@ -482,7 +447,7 @@ mod tests {
         for (input, identifier, expected) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             check_parser_errors(parser);
 
             let num_stmt = program.statements.len();
@@ -554,7 +519,7 @@ mod tests {
         for (input, expected) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             check_parser_errors(parser);
 
             let num_stmt = program.statements.len();
@@ -586,7 +551,7 @@ mod tests {
         let input = "foobar";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
 
         let num_stmts = program.statements.len();
         assert_eq!(
@@ -625,7 +590,7 @@ mod tests {
         let input = "5";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
 
         let num_stmts = program.statements.len();
         assert_eq!(
@@ -671,7 +636,7 @@ mod tests {
         for (input, operator, value) in prefix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             check_parser_errors(parser);
 
             let num_stmts = program.statements.len();
@@ -809,7 +774,7 @@ mod tests {
         for (input, left_value, operator, right_value) in infix_tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             check_parser_errors(parser);
 
             let num_stmts = program.statements.len();
@@ -878,7 +843,7 @@ mod tests {
         for (input, expected) in tests {
             let lexer = Lexer::new(input.to_string());
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             check_parser_errors(parser);
 
             let actual = program.to_string();
@@ -965,7 +930,7 @@ mod tests {
         let input = "if (x < y) { x }";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
@@ -1018,7 +983,7 @@ mod tests {
         let input = "if (x < y) { x } else { y }";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
@@ -1087,7 +1052,7 @@ mod tests {
         let input = "fn(x, y) {x + y;}";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
@@ -1150,7 +1115,7 @@ mod tests {
         let input = "add(1, 2 * 3, 4 + 5)";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
@@ -1199,7 +1164,7 @@ mod tests {
         let input = "\"hello world\"";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
@@ -1226,7 +1191,7 @@ mod tests {
         let input = "[1, 2 * 2, 3 + 3]";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
@@ -1267,7 +1232,7 @@ mod tests {
         let input = "myArray[1 + 1]";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
@@ -1295,7 +1260,7 @@ mod tests {
         let input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
@@ -1341,7 +1306,7 @@ mod tests {
         let input = "{}";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
@@ -1368,7 +1333,7 @@ mod tests {
         let input = "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}";
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         check_parser_errors(parser);
 
         let stmt = &program.statements[0];
