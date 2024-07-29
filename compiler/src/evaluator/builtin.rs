@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, Result};
+use std::fmt;
 
 use crate::object::Object;
 
@@ -12,6 +12,17 @@ pub enum Builtin {
     Rest,
     Push,
     Print,
+}
+
+fn check_argument_len(got: usize, expected: usize) -> Result<(), EvaluationError> {
+    if expected != got {
+        Err(EvaluationError::new(format!(
+            "wrong number of arguments. want={}. got={}",
+            expected, got
+        )))
+    } else {
+        Ok(())
+    }
 }
 
 impl Builtin {
@@ -30,12 +41,7 @@ impl Builtin {
     pub fn apply_func(&self, args: Vec<Object>) -> EvaluationResult {
         match self {
             Builtin::Len => {
-                if args.len() != 1 {
-                    return Err(EvaluationError::new(format!(
-                        "wrong number of arguments. got={}. want=1",
-                        args.len()
-                    )));
-                }
+                check_argument_len(args.len(), 1)?;
                 match &args[0] {
                     Object::String(val) => Ok(Object::Integer(val.len() as i64)),
                     Object::Array(arr) => Ok(Object::Integer(arr.len() as i64)),
@@ -46,12 +52,7 @@ impl Builtin {
                 }
             }
             Builtin::First => {
-                if args.len() != 1 {
-                    return Err(EvaluationError::new(format!(
-                        "wrong number of arguments. got={}. want=1",
-                        args.len()
-                    )));
-                }
+                check_argument_len(args.len(), 1)?;
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
@@ -70,12 +71,7 @@ impl Builtin {
                 }
             }
             Builtin::Last => {
-                if args.len() != 1 {
-                    return Err(EvaluationError::new(format!(
-                        "wrong number of arguments. got={}. want=1",
-                        args.len()
-                    )));
-                }
+                check_argument_len(args.len(), 1)?;
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
@@ -94,12 +90,7 @@ impl Builtin {
                 }
             }
             Builtin::Rest => {
-                if args.len() != 1 {
-                    return Err(EvaluationError::new(format!(
-                        "wrong number of arguments. got={}. want=1",
-                        args.len()
-                    )));
-                }
+                check_argument_len(args.len(), 1)?;
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
@@ -118,12 +109,8 @@ impl Builtin {
                 }
             }
             Builtin::Push => {
-                if args.len() != 2 {
-                    return Err(EvaluationError::new(format!(
-                        "wrong number of arguments. got={}. want=2",
-                        args.len()
-                    )));
-                }
+                check_argument_len(args.len(), 2)?;
+
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
                     _ => {
@@ -148,8 +135,8 @@ impl Builtin {
     }
 }
 
-impl Display for Builtin {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+impl fmt::Display for Builtin {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Builtin::Len => write!(f, "len"),
             Builtin::First => write!(f, "first"),

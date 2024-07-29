@@ -698,7 +698,7 @@ mod tests {
             ),
             (
                 "len(\"one\", \"two\")",
-                ExpectedValue::String(String::from("wrong number of arguments. got=2. want=1")),
+                ExpectedValue::String(String::from("wrong number of arguments. want=1. got=2")),
             ),
         ];
 
