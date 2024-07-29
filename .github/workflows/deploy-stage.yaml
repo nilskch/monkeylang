@@ -25,9 +25,10 @@ jobs:
       - name: Build
         run: cd web && yarn build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./web/build
+
   deploy:
     environment:
       name: github-pages
