@@ -3,6 +3,7 @@ pub mod environment;
 use crate::ast::{expression::Identifier, statement::BlockStatement};
 use crate::evaluator::builtin::Builtin;
 use environment::Env;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
@@ -14,6 +15,7 @@ pub const FUNCTION_OBJ: &str = "FUNCTION";
 pub const STRING_OBJ: &str = "STRING";
 pub const BUILTIN_OBJ: &str = "BUILTIN";
 pub const ARRAY_OBJ: &str = "ARRAY";
+pub const HASH_OBJ: &str = "HASH";
 
 #[derive(Clone)]
 pub enum Object {
@@ -25,6 +27,7 @@ pub enum Object {
     String(String),
     Builtin(Builtin),
     Array(Vec<Object>),
+    Hash(HashMap<Object, Object>),
     Null,
 }
 
@@ -47,6 +50,15 @@ impl Display for Object {
                 let elements = elements.clone().join(", ");
                 write!(f, "[{}]", elements)
             }
+            Object::Hash(hash) => {
+                let pairs: Vec<String> = hash
+                    .clone()
+                    .into_iter()
+                    .map(|(key, value)| format!("{}:{}", key, value))
+                    .collect();
+                let pairs = pairs.join(", ");
+                write!(f, "{{{}}}", pairs)
+            }
             Object::Null => write!(f, "null"),
         }
     }
@@ -63,6 +75,7 @@ impl Object {
             Object::String(_) => STRING_OBJ,
             Object::Builtin(_) => BUILTIN_OBJ,
             Object::Array(_) => ARRAY_OBJ,
+            Object::Hash(_) => HASH_OBJ,
             Object::Null => NULL_OBJ,
         }
     }
@@ -85,12 +98,8 @@ impl Object {
             Object::String(value) => format!("{}", value),
             Object::Error(msg) => format!("ERROR: {}", msg),
             Object::Builtin(_) => format!("builtin function"),
-            Object::Array(arr) => {
-                let elements: Vec<String> =
-                    arr.into_iter().map(|elem| format!("{}", elem)).collect();
-                let elements = elements.join(", ");
-                format!("[{}]", elements)
-            }
+            Object::Array(arr) => format!("{}", Object::Array(arr.clone())),
+            Object::Hash(hash) => format!("{}", Object::Hash(hash.clone())),
             Object::Null => String::from("null"),
         }
     }
