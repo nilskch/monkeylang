@@ -8,7 +8,7 @@ use crate::ast::expression::{Expression, HashLiteral, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::{Env, Environment};
-use crate::object::{Function, Object, ARRAY_OBJ, BOOLEAN_OBJ, HASH_OBJ, INTEGER_OBJ, STRING_OBJ};
+use crate::object::{Function, Object};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -115,23 +115,23 @@ fn eval_hash_literal(hash_literal: HashLiteral, env: &Env) -> EvaluationResult {
 }
 
 fn eval_index_expression(left: Object, index: Object) -> EvaluationResult {
-    if left.object_type() == ARRAY_OBJ && index.object_type() == INTEGER_OBJ {
-        eval_array_index_expression(left, index)
-    } else if left.object_type() == HASH_OBJ {
-        eval_hash_index_expression(left, index)
-    } else {
-        Err(EvaluationError::new(format!(
+    match left {
+        Object::Array(arr) => match index {
+            Object::Integer(idx) => eval_array_index_expression(arr, idx),
+            _ => Err(EvaluationError::new(format!(
+                "unusable as hash key: {}",
+                index.object_type()
+            ))),
+        },
+        Object::Hash(hash) => eval_hash_index_expression(hash, index),
+        _ => Err(EvaluationError::new(format!(
             "index operator not supported: {}",
             left.object_type()
-        )))
+        ))),
     }
 }
-fn eval_hash_index_expression(hash: Object, index: Object) -> EvaluationResult {
-    let hash_obj = match hash {
-        Object::Hash(hash_obj) => hash_obj,
-        _ => unreachable!(),
-    };
 
+fn eval_hash_index_expression(hash: HashMap<Object, Object>, index: Object) -> EvaluationResult {
     if !index.is_hashable() {
         return Err(EvaluationError::new(format!(
             "unusable as hash key: {}",
@@ -139,23 +139,14 @@ fn eval_hash_index_expression(hash: Object, index: Object) -> EvaluationResult {
         )));
     }
 
-    match hash_obj.get(&index) {
+    match hash.get(&index) {
         Some(value) => Ok(value.clone()),
         None => Ok(Object::Null),
     }
 }
 
-fn eval_array_index_expression(array: Object, index: Object) -> EvaluationResult {
-    let array = match array {
-        Object::Array(array) => array,
-        _ => unreachable!(),
-    };
-    let index = match index {
-        Object::Integer(val) => val,
-        _ => unreachable!(),
-    };
+fn eval_array_index_expression(array: Vec<Object>, index: i64) -> EvaluationResult {
     let max = (array.len() - 1) as i64;
-
     if index < 0 || index > max {
         // this is a language design decision: we don't want to
         // throw an out of bounce error, but return null
@@ -261,10 +252,10 @@ fn eval_infix_expression(operator: &str, left: Object, right: Object) -> Evaluat
         )));
     }
 
-    match left.object_type() {
-        STRING_OBJ => eval_string_infix_expression(operator, left, right),
-        INTEGER_OBJ => eval_integer_infix_expression(operator, left, right),
-        BOOLEAN_OBJ => eval_boolean_infix_expression(operator, left, right),
+    match left {
+        Object::String(_) => eval_string_infix_expression(operator, left, right),
+        Object::Integer(_) => eval_integer_infix_expression(operator, left, right),
+        Object::Boolean(_) => eval_boolean_infix_expression(operator, left, right),
         _ => Err(EvaluationError::new(format!(
             "unknown operator: {} {} {}",
             left.object_type(),
@@ -372,11 +363,7 @@ fn is_truthy(object: Object) -> bool {
 mod tests {
     use super::*;
     use crate::object::environment::Environment;
-    use crate::{
-        lexer::Lexer,
-        object::{Object, NULL_OBJ},
-        parser::Parser,
-    };
+    use crate::{lexer::Lexer, object::Object, parser::Parser};
     use std::cell::RefCell;
 
     enum ExpectedValue {
@@ -531,12 +518,11 @@ mod tests {
     }
 
     fn test_null_object(object: &Object) {
+        if let Object::Null = object {
+            return;
+        }
         let object_type = object.object_type();
-        assert_eq!(
-            object_type, NULL_OBJ,
-            "object.object_type() not '{}'. got='{}'",
-            NULL_OBJ, object_type
-        );
+        panic!("object is not NULL. got='{}'", object_type)
     }
 
     #[test]

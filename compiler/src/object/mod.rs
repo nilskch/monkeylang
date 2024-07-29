@@ -7,16 +7,6 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 use std::hash::{Hash, Hasher};
 
-pub const BOOLEAN_OBJ: &str = "BOOLEAN";
-pub const INTEGER_OBJ: &str = "INTEGER";
-pub const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
-pub const NULL_OBJ: &str = "NULL";
-pub const FUNCTION_OBJ: &str = "FUNCTION";
-pub const STRING_OBJ: &str = "STRING";
-pub const BUILTIN_OBJ: &str = "BUILTIN";
-pub const ARRAY_OBJ: &str = "ARRAY";
-pub const HASH_OBJ: &str = "HASH";
-
 #[derive(Clone, PartialEq, Eq)]
 pub enum Object {
     Integer(i64),
@@ -55,7 +45,7 @@ impl Display for Object {
                     .map(|(key, value)| format!("{}:{}", key, value))
                     .collect();
                 let pairs = pairs.join(", ");
-                write!(f, "{{{}}}", pairs)
+                write!(f, "{{ {} }}", pairs)
             }
             Object::Null => write!(f, "null"),
         }
@@ -65,15 +55,15 @@ impl Display for Object {
 impl Object {
     pub fn object_type(&self) -> &str {
         match self {
-            Object::Boolean(_) => BOOLEAN_OBJ,
-            Object::Integer(_) => INTEGER_OBJ,
-            Object::ReturnValue(_) => RETURN_VALUE_OBJ,
-            Object::Function(_) => FUNCTION_OBJ,
-            Object::String(_) => STRING_OBJ,
-            Object::Builtin(_) => BUILTIN_OBJ,
-            Object::Array(_) => ARRAY_OBJ,
-            Object::Hash(_) => HASH_OBJ,
-            Object::Null => NULL_OBJ,
+            Object::Boolean(_) => "BOOLEAN",
+            Object::Integer(_) => "INTEGER",
+            Object::ReturnValue(_) => "RETURN_VALUE",
+            Object::Function(_) => "FUNCTION",
+            Object::String(_) => "STRING",
+            Object::Builtin(_) => "BUILTIN",
+            Object::Array(_) => "ARRAY",
+            Object::Hash(_) => "HASH",
+            Object::Null => "NULL",
         }
     }
 
