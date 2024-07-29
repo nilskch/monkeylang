@@ -104,6 +104,13 @@ impl Object {
             Object::Null => String::from("null"),
         }
     }
+
+    pub fn is_hashable(&self) -> bool {
+        match self {
+            Object::Boolean(_) | Object::String(_) | Object::Integer(_) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq)]

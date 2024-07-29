@@ -8,7 +8,8 @@ use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::{Env, Environment};
 use crate::object::{
-    Function, Object, ARRAY_OBJ, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ, STRING_OBJ,
+    Function, Object, ARRAY_OBJ, BOOLEAN_OBJ, ERROR_OBJ, HASH_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ,
+    STRING_OBJ,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -154,11 +155,28 @@ fn eval_hash_literal(hash_literal: HashLiteral, env: &Env) -> Object {
 fn eval_index_expression(left: Object, index: Object) -> Object {
     if left.object_type() == ARRAY_OBJ && index.object_type() == INTEGER_OBJ {
         eval_array_index_expression(left, index)
+    } else if left.object_type() == HASH_OBJ {
+        eval_hash_index_expression(left, index)
     } else {
         Object::Error(format!(
             "index operator not supported: {}",
             left.object_type()
         ))
+    }
+}
+fn eval_hash_index_expression(hash: Object, index: Object) -> Object {
+    let hash_obj = match hash {
+        Object::Hash(hash_obj) => hash_obj,
+        _ => unreachable!(),
+    };
+
+    if !index.is_hashable() {
+        return Object::Error(format!("unusable as hash key: {}", index.object_type()));
+    }
+
+    match hash_obj.get(&index) {
+        Some(value) => value.clone(),
+        None => Object::Null,
     }
 }
 
@@ -546,12 +564,12 @@ mod tests {
 
         match expected {
             Object::Integer(value) => test_integer_object(&object, value),
-            Object::Null => test_null_object(object),
+            Object::Null => test_null_object(&object),
             _ => unreachable!(),
         }
     }
 
-    fn test_null_object(object: Object) {
+    fn test_null_object(object: &Object) {
         let object_type = object.object_type();
         assert_eq!(
             object_type, NULL_OBJ,
@@ -600,6 +618,10 @@ mod tests {
             ),
             ("foobar", "identifier not found: foobar"),
             ("\"Hello\" - \"World\"", "unknown operator: STRING - STRING"),
+            (
+                "{\"name\": \"Monkey\"}[fn(x) { x }];",
+                "unusable as hash key: FUNCTION",
+            ),
         ];
 
         for (input, expected) in tests {
@@ -860,6 +882,30 @@ mod tests {
             };
 
             test_integer_object(object, expected_value)
+        }
+    }
+
+    #[test]
+    fn test_hash_index_expression() {
+        let tests = [
+            ("{\"foo\": 5}[\"foo\"]", ExpectedValue::Integer(5)),
+            (
+                "let key = \"foo\"; {\"foo\": 5}[key]",
+                ExpectedValue::Integer(5),
+            ),
+            ("{}[\"foo\"]", ExpectedValue::Null),
+            ("{5: 5}[5]", ExpectedValue::Integer(5)),
+            ("{true: 5}[true]", ExpectedValue::Integer(5)),
+            ("{false: 5}[false]", ExpectedValue::Integer(5)),
+        ];
+
+        for (input, expected) in tests {
+            let evaluated = test_eval(input);
+            match expected {
+                ExpectedValue::Integer(val) => test_integer_object(&evaluated, val),
+                ExpectedValue::Null => test_null_object(&evaluated),
+                _ => unreachable!(),
+            }
         }
     }
 }
