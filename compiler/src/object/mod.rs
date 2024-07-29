@@ -135,7 +135,7 @@ impl Hash for Object {
             Object::Integer(val) => val.hash(state),
             Object::Boolean(val) => val.hash(state),
             Object::String(val) => val.hash(state),
-            _ => "".hash(state),
+            _ => unreachable!(),
         }
     }
 }

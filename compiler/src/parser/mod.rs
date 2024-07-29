@@ -21,7 +21,6 @@ pub struct Parser {
     pub lexer: Lexer,
     pub cur_token: Token,
     pub peek_token: Token,
-    pub errors: Vec<String>,
 }
 
 impl Parser {
@@ -29,7 +28,6 @@ impl Parser {
         Parser {
             cur_token: lexer.next_token(),
             peek_token: lexer.next_token(),
-            errors: vec![],
             lexer,
         }
     }
@@ -43,9 +41,8 @@ impl Parser {
         let mut program = Program::new();
 
         while self.cur_token.token_type != TokenType::Eof {
-            if let Ok(stmt) = self.parse_statement() {
-                program.statements.push(stmt);
-            }
+            let stmt = self.parse_statement()?;
+            program.statements.push(stmt);
             self.next_token();
         }
 
@@ -92,7 +89,7 @@ impl Parser {
             TokenType::LBrace => self.parse_hash_literal()?,
             _ => {
                 return Err(ParserError::new(format!(
-                    "no prefix parse function for {} found",
+                    "no prefix parse function for '{}' found",
                     self.cur_token.token_type.clone()
                 )))
             }
@@ -318,10 +315,9 @@ impl Parser {
 
     fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
         self.next_token();
-        let expr = self.parse_expression(Precedence::Lowest);
-
+        let expr = self.parse_expression(Precedence::Lowest)?;
         self.expect_peek(&TokenType::RParen)?;
-        expr
+        Ok(expr)
     }
 
     fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
@@ -341,6 +337,7 @@ impl Parser {
         let alternative = if self.peek_token_is(&TokenType::Else) {
             self.next_token();
             self.expect_peek(&TokenType::LBrace)?;
+
             Some(self.parse_block_statement()?)
         } else {
             None
@@ -361,10 +358,8 @@ impl Parser {
         self.next_token();
 
         while !self.cur_token_is(TokenType::RBrace) && !self.cur_token_is(TokenType::Eof) {
-            if let Ok(stmt) = self.parse_statement() {
-                statements.push(stmt);
-            }
-
+            let stmt = self.parse_statement()?;
+            statements.push(stmt);
             self.next_token();
         }
 

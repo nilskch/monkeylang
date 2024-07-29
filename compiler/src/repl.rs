@@ -29,7 +29,7 @@ pub fn start() {
         let program = match parser.parse_program() {
             Ok(program) => program,
             Err(err) => {
-                println!("{}", err);
+                println!("ERROR: {}", err);
                 continue;
             }
         };
@@ -39,7 +39,7 @@ pub fn start() {
                 Object::Null => continue,
                 _ => println!("{}", result.inspect()),
             },
-            Err(err) => println!("{}", err),
+            Err(err) => println!("ERROR: {}", err),
         }
     }
 }

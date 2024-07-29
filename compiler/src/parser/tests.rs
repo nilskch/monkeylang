@@ -21,7 +21,6 @@ fn test_let_statements() {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program().unwrap();
-        check_parser_errors(parser);
 
         let num_stmt = program.statements.len();
         assert_eq!(
@@ -63,21 +62,6 @@ fn test_let_statement(stmt: &Statement, name: &str) {
     );
 }
 
-fn check_parser_errors(parser: Parser) {
-    let num_errors = parser.errors.len();
-
-    if num_errors == 0 {
-        return;
-    }
-
-    println!("parser has {} errors:", num_errors);
-    for msg in parser.errors {
-        println!("parser error: {}", msg)
-    }
-
-    unreachable!();
-}
-
 #[test]
 fn test_return_statements() {
     let tests = [
@@ -85,7 +69,7 @@ fn test_return_statements() {
         ("return true;", ExpectedValue::Boolean(true)),
         (
             "return foobar;",
-            ExpectedValue::String("foobar".to_string()),
+            ExpectedValue::String(String::from("foobar")),
         ),
     ];
 
@@ -93,7 +77,6 @@ fn test_return_statements() {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program().unwrap();
-        check_parser_errors(parser);
 
         let num_stmt = program.statements.len();
         assert_eq!(
@@ -210,7 +193,6 @@ fn test_parsing_prefix_expressions() {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program().unwrap();
-        check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
         assert_eq!(
@@ -348,7 +330,6 @@ fn test_parsing_infix_expressions() {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program().unwrap();
-        check_parser_errors(parser);
 
         let num_stmts = program.statements.len();
         assert_eq!(
@@ -417,7 +398,6 @@ fn test_operator_precedence_parsing() {
         let lexer = Lexer::new(input.to_string());
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program().unwrap();
-        check_parser_errors(parser);
 
         let actual = program.to_string();
         assert_eq!(
@@ -504,7 +484,6 @@ fn test_if_expression() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let num_stmts = program.statements.len();
     assert_eq!(
@@ -557,7 +536,6 @@ fn test_if_else_expression() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let num_stmts = program.statements.len();
     assert_eq!(
@@ -626,7 +604,6 @@ fn test_parsing_function_literal() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let num_stmts = program.statements.len();
     assert_eq!(
@@ -689,7 +666,6 @@ fn test_object_expression_parsing() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let num_stmts = program.statements.len();
     assert_eq!(
@@ -738,7 +714,6 @@ fn test_parsing_string_literal() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
@@ -765,7 +740,6 @@ fn test_parsing_array_literals() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
@@ -806,7 +780,6 @@ fn test_parsing_index_expressions() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
@@ -834,7 +807,6 @@ fn test_parsing_hash_literal_string_keys() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
@@ -880,7 +852,6 @@ fn test_parsing_empty_hash_literal() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
@@ -907,7 +878,6 @@ fn test_parsing_hash_literal_with_expression() {
     let lexer = Lexer::new(input.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program().unwrap();
-    check_parser_errors(parser);
 
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {

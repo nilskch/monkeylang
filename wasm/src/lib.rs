@@ -1,16 +1,6 @@
-// all the wasm stuff is going to live here
+use wasm_bindgen::prelude::*;
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[wasm_bindgen]
+pub fn eval_monkey_code(input: &str) -> String {
+    String::from(input)
 }
