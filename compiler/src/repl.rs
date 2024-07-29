@@ -34,8 +34,11 @@ pub fn start() {
 
         let evaluated = eval_program(program, env);
         match evaluated {
-            Object::Null => continue,
-            _ => println!("{}", evaluated.inspect()),
+            Ok(result) => match result {
+                Object::Null => continue,
+                _ => println!("{}", result.inspect()),
+            },
+            Err(err) => println!("{}", err),
         }
     }
 }

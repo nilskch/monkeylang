@@ -2,6 +2,8 @@ use std::fmt::{Display, Formatter, Result};
 
 use crate::object::Object;
 
+use super::{error::EvaluationError, EvaluationResult};
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Builtin {
     Len,
@@ -25,122 +27,122 @@ impl Builtin {
         }
     }
 
-    pub fn apply_func(&self, args: Vec<Object>) -> Object {
+    pub fn apply_func(&self, args: Vec<Object>) -> EvaluationResult {
         match self {
             Builtin::Len => {
                 if args.len() != 1 {
-                    return Object::Error(format!(
+                    return Err(EvaluationError::new(format!(
                         "wrong number of arguments. got={}. want=1",
                         args.len()
-                    ));
+                    )));
                 }
                 match &args[0] {
-                    Object::String(val) => Object::Integer(val.len() as i64),
-                    Object::Array(arr) => Object::Integer(arr.len() as i64),
-                    _ => Object::Error(format!(
+                    Object::String(val) => Ok(Object::Integer(val.len() as i64)),
+                    Object::Array(arr) => Ok(Object::Integer(arr.len() as i64)),
+                    _ => Err(EvaluationError::new(format!(
                         "argument to `len` not supported, got {}",
                         &args[0].object_type()
-                    )),
+                    ))),
                 }
             }
             Builtin::First => {
                 if args.len() != 1 {
-                    return Object::Error(format!(
+                    return Err(EvaluationError::new(format!(
                         "wrong number of arguments. got={}. want=1",
                         args.len()
-                    ));
+                    )));
                 }
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
                     _ => {
-                        return Object::Error(format!(
+                        return Err(EvaluationError::new(format!(
                             "argument to `first` must be `ARRAY, got {}",
                             args[0].object_type()
-                        ))
+                        )))
                     }
                 };
 
                 if arr.len() > 0 {
-                    arr[0].clone()
+                    Ok(arr[0].clone())
                 } else {
-                    Object::Null
+                    Ok(Object::Null)
                 }
             }
             Builtin::Last => {
                 if args.len() != 1 {
-                    return Object::Error(format!(
+                    return Err(EvaluationError::new(format!(
                         "wrong number of arguments. got={}. want=1",
                         args.len()
-                    ));
+                    )));
                 }
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
                     _ => {
-                        return Object::Error(format!(
+                        return Err(EvaluationError::new(format!(
                             "argument to `last` must be `ARRAY, got {}",
                             args[0].object_type()
-                        ))
+                        )))
                     }
                 };
 
                 if arr.len() > 0 {
-                    arr[arr.len() - 1].clone()
+                    Ok(arr[arr.len() - 1].clone())
                 } else {
-                    Object::Null
+                    Ok(Object::Null)
                 }
             }
             Builtin::Rest => {
                 if args.len() != 1 {
-                    return Object::Error(format!(
+                    return Err(EvaluationError::new(format!(
                         "wrong number of arguments. got={}. want=1",
                         args.len()
-                    ));
+                    )));
                 }
 
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
                     _ => {
-                        return Object::Error(format!(
+                        return Err(EvaluationError::new(format!(
                             "argument to `rest` must be `ARRAY, got {}",
                             args[0].object_type()
-                        ))
+                        )))
                     }
                 };
 
                 if arr.len() > 0 {
-                    Object::Array(arr[1..].to_vec())
+                    Ok(Object::Array(arr[1..].to_vec()))
                 } else {
-                    Object::Null
+                    Ok(Object::Null)
                 }
             }
             Builtin::Push => {
                 if args.len() != 2 {
-                    return Object::Error(format!(
+                    return Err(EvaluationError::new(format!(
                         "wrong number of arguments. got={}. want=2",
                         args.len()
-                    ));
+                    )));
                 }
                 let arr = match &args[0] {
                     Object::Array(arr) => arr,
                     _ => {
-                        return Object::Error(format!(
+                        return Err(EvaluationError::new(format!(
                             "argument to `rest` must be `ARRAY, got {}",
                             args[0].object_type()
-                        ))
+                        )))
                     }
                 };
                 let mut new_arr = arr.clone();
                 new_arr.push(args[1].clone());
 
-                Object::Array(new_arr)
+                Ok(Object::Array(new_arr))
             }
             Builtin::Print => {
                 for arg in args.iter() {
                     println!("{}", arg);
                 }
-                Object::Null
+                Ok(Object::Null)
             }
         }
     }
