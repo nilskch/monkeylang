@@ -1,10 +1,11 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 use super::Object;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Environment {
     store: HashMap<String, Object>,
     outer: Option<Env>,
@@ -39,5 +40,14 @@ impl Environment {
 
     pub fn set(&mut self, name: String, value: Object) {
         self.store.insert(name, value);
+    }
+}
+
+impl Hash for Environment {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        for (key, value) in self.store.iter() {
+            key.hash(state);
+            value.hash(state);
+        }
     }
 }

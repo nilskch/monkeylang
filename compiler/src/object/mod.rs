@@ -5,6 +5,7 @@ use crate::evaluator::builtin::Builtin;
 use environment::Env;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
+use std::hash::{Hash, Hasher};
 
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const INTEGER_OBJ: &str = "INTEGER";
@@ -17,7 +18,7 @@ pub const BUILTIN_OBJ: &str = "BUILTIN";
 pub const ARRAY_OBJ: &str = "ARRAY";
 pub const HASH_OBJ: &str = "HASH";
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Object {
     Integer(i64),
     Boolean(bool),
@@ -105,7 +106,7 @@ impl Object {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Function {
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
@@ -133,5 +134,16 @@ impl Display for Function {
         let parameters = parameters.join(", ");
 
         write!(f, "fn({}) {{ {} }}", parameters, self.body)
+    }
+}
+
+impl Hash for Object {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Object::Integer(val) => val.hash(state),
+            Object::Boolean(val) => val.hash(state),
+            Object::String(val) => val.hash(state),
+            _ => "".hash(state),
+        }
     }
 }

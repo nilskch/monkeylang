@@ -3,7 +3,7 @@ mod error;
 
 use builtin::Builtin;
 
-use crate::ast::expression::{Expression, Identifier, IfExpression};
+use crate::ast::expression::{Expression, HashLiteral, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
 use crate::object::environment::{Env, Environment};
@@ -11,6 +11,7 @@ use crate::object::{
     Function, Object, ARRAY_OBJ, BOOLEAN_OBJ, ERROR_OBJ, INTEGER_OBJ, RETURN_VALUE_OBJ, STRING_OBJ,
 };
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 pub fn eval_program(program: Program, env: &Env) -> Object {
@@ -126,8 +127,28 @@ fn eval_expression(expr: Expression, env: &Env) -> Object {
             }
             eval_index_expression(left, index)
         }
+        Expression::Hash(hash_literal) => eval_hash_literal(hash_literal, env),
         _ => Object::Null,
     }
+}
+
+fn eval_hash_literal(hash_literal: HashLiteral, env: &Env) -> Object {
+    let mut pairs = HashMap::new();
+
+    for (key, value) in hash_literal.pairs.into_iter() {
+        let key = eval_expression(key, env);
+        if is_error(&key) {
+            return key;
+        }
+
+        let value = eval_expression(value, env);
+        if is_error(&value) {
+            return value;
+        }
+        pairs.insert(key, value);
+    }
+
+    Object::Hash(pairs)
 }
 
 fn eval_index_expression(left: Object, index: Object) -> Object {
@@ -793,6 +814,52 @@ mod tests {
                 },
                 _ => continue,
             }
+        }
+    }
+
+    #[test]
+    fn test_hash_literals() {
+        let input = "
+        let two = \"two\";
+        {
+            \"one\": 10 - 9,
+            two: 1 + 1,
+            \"thr\" + \"ee\": 6 / 2,
+            4: 4,
+            true: 5,
+            false: 6
+        }
+        ";
+
+        let evaluated = test_eval(input);
+        let hash_obj = match evaluated {
+            Object::Hash(hash_obj) => hash_obj,
+            _ => unreachable!(),
+        };
+
+        let mut expected = HashMap::new();
+        expected.insert(Object::String(String::from("one")), 1);
+        expected.insert(Object::String(String::from("two")), 2);
+        expected.insert(Object::String(String::from("three")), 3);
+        expected.insert(Object::Integer(4), 4);
+        expected.insert(Object::Boolean(true), 5);
+        expected.insert(Object::Boolean(false), 6);
+
+        assert_eq!(
+            hash_obj.len(),
+            expected.len(),
+            "hash has wrong number of pairs. want={}. got={}",
+            expected.len(),
+            hash_obj.len()
+        );
+
+        for (expected_key, expected_value) in expected.into_iter() {
+            let object = match hash_obj.get(&expected_key) {
+                Some(value) => value,
+                None => unreachable!(),
+            };
+
+            test_integer_object(object, expected_value)
         }
     }
 }

@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter, Result};
 
 use crate::object::Object;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Builtin {
     Len,
     First,
