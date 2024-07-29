@@ -18,3 +18,5 @@ jobs:
           node-version: "22"
       - name: Install dependencies
         run: cd web && yarn --frozen-lockfile
+      - name: Build
+        run: cd web && yarn build
