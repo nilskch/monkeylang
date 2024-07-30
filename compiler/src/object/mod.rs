@@ -27,7 +27,7 @@ impl Display for Object {
             Object::Boolean(val) => write!(f, "{}", val),
             Object::ReturnValue(val) => write!(f, "{}", val),
             Object::Function(val) => write!(f, "{}", val),
-            Object::String(val) => write!(f, "{}", val),
+            Object::String(val) => write!(f, "\"{}\"", val),
             Object::Builtin(val) => write!(f, "{}", val),
             Object::Array(elements) => {
                 let elements: Vec<String> = elements
@@ -73,7 +73,7 @@ impl Object {
             Object::Integer(value) => format!("{}", value),
             Object::ReturnValue(value) => format!("{}", value),
             Object::Function(function) => format!("{}", function),
-            Object::String(value) => format!("{}", value),
+            Object::String(value) => format!("\"{}\"", value),
             Object::Array(arr) => format!("{}", Object::Array(arr.clone())),
             Object::Hash(hash) => format!("{}", Object::Hash(hash.clone())),
             Object::Builtin(_) => format!("builtin function"),
