@@ -1,7 +1,8 @@
 # Monkeylang
 
 This is a Rust implementation of the Monkey programming language created by [Thorsten Ball](https://github.com/mrnugget).
-This is a fun learning project to understand more about interpreters and compilers and to learn Rust.
+This is a fun project to learn more about interpreters and compilers and to learn Rust programming language.
+The interpreter is written in pure Rust without any external libraries.
 
 ## Playground
 Run monkey code and discover all language features online in the [wasm based playground](https://nilskch.github.io/monkeylang).
@@ -31,7 +32,9 @@ Run monkey code:
 $ monkey run main.mky
 ```
 
+
 ## Resources
+I used the following resources for this project:
 - The book "[Writing An Interpreter In Go](https://interpreterbook.com/)" by [Thorsten Ball](https://github.com/mrnugget)
 - The sequel "[Writing A Compiler In Go](https://compilerbook.com/)" by [Thorsten Ball](https://github.com/mrnugget)
 - THE Rust book "[The Rust Programming Language](https://doc.rust-lang.org/book/)"

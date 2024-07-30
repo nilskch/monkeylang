@@ -17,13 +17,13 @@ mod tests {
     fn test_fmt() {
         let program = Program {
             statements: vec![Statement::Let(LetStatement::new(
-                Token::new(TokenType::Let, String::from("let")),
+                Token::new(TokenType::Let, String::from("let"), -1),
                 Identifier::new(
-                    Token::new(TokenType::Ident, String::from("myVar")),
+                    Token::new(TokenType::Ident, String::from("myVar"), -1),
                     String::from("myVar"),
                 ),
                 Expression::Ident(Identifier::new(
-                    Token::new(TokenType::Ident, String::from("anotherVar")),
+                    Token::new(TokenType::Ident, String::from("anotherVar"), -1),
                     String::from("anotherVar"),
                 )),
             ))],
