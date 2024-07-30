@@ -29,7 +29,7 @@ pub fn start() {
         let program = match parser.parse_program() {
             Ok(program) => program,
             Err(err) => {
-                println!("ERROR: {}", err);
+                println!("{}", err);
                 continue;
             }
         };

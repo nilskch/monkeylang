@@ -71,7 +71,7 @@ impl Parser {
     fn parse_boolean_expression(&self) -> Expression {
         Expression::Boolean(BooleanLiteral::new(
             self.cur_token.clone(),
-            self.cur_token_is(TokenType::True),
+            self.cur_token_is(&TokenType::True),
         ))
     }
 
@@ -88,10 +88,13 @@ impl Parser {
             TokenType::LBracket => self.parse_array_literal()?,
             TokenType::LBrace => self.parse_hash_literal()?,
             _ => {
-                return Err(ParserError::new(format!(
-                    "no prefix parse function for '{}' found",
-                    self.cur_token.token_type.clone()
-                )))
+                return Err(ParserError::new(
+                    format!(
+                        "no prefix parse function for '{}' found",
+                        self.cur_token.token_type.clone()
+                    ),
+                    self.cur_token.line,
+                ))
             }
         };
 
@@ -207,10 +210,10 @@ impl Parser {
         let value = match token.literal.parse::<i64>() {
             Ok(value) => value,
             Err(_) => {
-                return Err(ParserError::new(format!(
-                    "could not parse '{}' to integer",
-                    token.literal
-                )))
+                return Err(ParserError::new(
+                    format!("could not parse '{}' to integer", token.literal),
+                    token.line,
+                ))
             }
         };
 
@@ -245,15 +248,15 @@ impl Parser {
 
         let value = self.parse_expression(Precedence::Lowest)?;
 
-        if !self.cur_token_is(TokenType::Semicolon) {
+        if !self.cur_token_is(&TokenType::Semicolon) {
             self.next_token()
         }
 
         Ok(Statement::Let(LetStatement::new(token, name, value)))
     }
 
-    fn cur_token_is(&self, token_type: TokenType) -> bool {
-        self.cur_token.token_type == token_type
+    fn cur_token_is(&self, token_type: &TokenType) -> bool {
+        self.cur_token.token_type == *token_type
     }
 
     fn peek_token_is(&self, token_type: &TokenType) -> bool {
@@ -265,10 +268,27 @@ impl Parser {
             self.next_token();
             Ok(())
         } else {
-            Err(ParserError::new(format!(
-                "expected next token to be '{}', but got '{}' instead",
-                token_type, self.peek_token.token_type
-            )))
+            Err(ParserError::new(
+                format!(
+                    "expected next token to be '{}', but got '{}' instead",
+                    token_type, self.peek_token.token_type
+                ),
+                self.peek_token.line,
+            ))
+        }
+    }
+
+    fn expect_cur_token(&self, token_type: &TokenType) -> Result<(), ParserError> {
+        if self.cur_token_is(token_type) {
+            Ok(())
+        } else {
+            Err(ParserError::new(
+                format!(
+                    "expected next token to be '{}', but got '{}' instead",
+                    token_type, self.peek_token.token_type
+                ),
+                self.peek_token.line,
+            ))
         }
     }
 
@@ -357,11 +377,13 @@ impl Parser {
 
         self.next_token();
 
-        while !self.cur_token_is(TokenType::RBrace) && !self.cur_token_is(TokenType::Eof) {
+        while !self.cur_token_is(&TokenType::RBrace) && !self.cur_token_is(&TokenType::Eof) {
             let stmt = self.parse_statement()?;
             statements.push(stmt);
             self.next_token();
         }
+
+        self.expect_cur_token(&TokenType::RBrace)?;
 
         Ok(BlockStatement::new(token, statements))
     }
