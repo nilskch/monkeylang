@@ -26,10 +26,4 @@ fn main() {
         Some(file_path) => *file_path,
         None => panic!("No file path provided."),
     };
-
-    match *matches.get_one::<&str>("cmd").unwrap() {
-        "run" => println!("RUN"),
-        "fmt" => println!("FMT"),
-        _ => println!("ERROR"),
-    }
 }

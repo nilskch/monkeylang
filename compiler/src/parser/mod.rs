@@ -91,9 +91,9 @@ impl Parser {
                 return Err(ParserError::new(
                     format!(
                         "no prefix parse function for '{}' found",
-                        self.cur_token.token_type.clone()
+                        self.cur_token.token_type
                     ),
-                    self.cur_token.line,
+                    self.cur_token.position,
                 ))
             }
         };
@@ -212,7 +212,7 @@ impl Parser {
             Err(_) => {
                 return Err(ParserError::new(
                     format!("could not parse '{}' to integer", token.literal),
-                    token.line,
+                    token.position,
                 ))
             }
         };
@@ -273,7 +273,7 @@ impl Parser {
                     "expected next token to be '{}', but got '{}' instead",
                     token_type, self.peek_token.token_type
                 ),
-                self.peek_token.line,
+                self.peek_token.position,
             ))
         }
     }
@@ -287,7 +287,7 @@ impl Parser {
                     "expected next token to be '{}', but got '{}' instead",
                     token_type, self.peek_token.token_type
                 ),
-                self.peek_token.line,
+                self.peek_token.position,
             ))
         }
     }

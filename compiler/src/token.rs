@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter, Result};
 
+pub type TokenPosition = ((i64, i64), (i64, i64));
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub enum TokenType {
     Illegal,
@@ -101,15 +103,24 @@ impl Display for TokenType {
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
-    pub line: i64,
+    pub position: TokenPosition,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, literal: String, line: i64) -> Token {
+    pub fn new(token_type: TokenType, literal: String, position: TokenPosition) -> Token {
         Token {
             token_type,
             literal,
-            line,
+            position,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn new_without_pos(token_type: TokenType, literal: String) -> Token {
+        Token {
+            token_type,
+            literal,
+            position: ((0, 0), (0, 0)),
         }
     }
 }

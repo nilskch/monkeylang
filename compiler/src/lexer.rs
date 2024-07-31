@@ -2,23 +2,22 @@ use super::token::{lookup_ident, Token, TokenType};
 
 pub struct Lexer {
     input: String,
-    number_of_chars: usize, // used support UTF-8 encoding (String.len() != number of characters in the string)
     position: usize,
     read_position: usize,
     ch: char,
     line: i64,
+    col: i64,
 }
 
 impl Lexer {
     pub fn new(input: String) -> Lexer {
-        let number_of_chars = input.chars().count();
         let mut l = Lexer {
             input,
-            number_of_chars,
             position: 0,
             read_position: 0,
             ch: '\0',
             line: 1,
+            col: 0,
         };
         l.read_char();
         l
@@ -31,63 +30,144 @@ impl Lexer {
             '=' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::Eq, "==".into(), self.line)
+                    Token::new(
+                        TokenType::Eq,
+                        "==".into(),
+                        ((self.line, self.col - 1), (0, 0)),
+                    )
                 } else {
-                    Token::new(TokenType::Assign, self.ch.into(), self.line)
+                    Token::new(
+                        TokenType::Assign,
+                        self.ch.into(),
+                        ((self.line, self.col), (0, 0)),
+                    )
                 }
             }
-            '+' => Token::new(TokenType::Plus, self.ch.into(), self.line),
-            '-' => Token::new(TokenType::Minus, self.ch.into(), self.line),
+            '+' => Token::new(
+                TokenType::Plus,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '-' => Token::new(
+                TokenType::Minus,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
             '!' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::NotEq, "!=".into(), self.line)
+                    Token::new(
+                        TokenType::NotEq,
+                        "!=".into(),
+                        ((self.line, self.col - 1), (0, 0)),
+                    )
                 } else {
-                    Token::new(TokenType::Bang, self.ch.into(), self.line)
+                    Token::new(
+                        TokenType::Bang,
+                        self.ch.into(),
+                        ((self.line, self.col), (0, 0)),
+                    )
                 }
             }
-            '/' => Token::new(TokenType::Slash, self.ch.into(), self.line),
-            '*' => Token::new(TokenType::Asterik, self.ch.into(), self.line),
+            '/' => Token::new(
+                TokenType::Slash,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '*' => Token::new(
+                TokenType::Asterik,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
             '<' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::LtEq, "<=".into(), self.line)
+                    Token::new(
+                        TokenType::LtEq,
+                        "<=".into(),
+                        ((self.line, self.col - 1), (0, 0)),
+                    )
                 } else {
-                    Token::new(TokenType::Lt, self.ch.into(), self.line)
+                    Token::new(
+                        TokenType::Lt,
+                        self.ch.into(),
+                        ((self.line, self.col), (0, 0)),
+                    )
                 }
             }
             '>' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::GtEq, ">=".into(), self.line)
+                    Token::new(TokenType::GtEq, ">=".into(), ((0, 0), (0, 0)))
                 } else {
-                    Token::new(TokenType::Gt, self.ch.into(), self.line)
+                    Token::new(TokenType::Gt, self.ch.into(), ((0, 0), (0, 0)))
                 }
             }
-            ';' => Token::new(TokenType::Semicolon, self.ch.into(), self.line),
-            ':' => Token::new(TokenType::Colon, self.ch.into(), self.line),
-            ',' => Token::new(TokenType::Comma, self.ch.into(), self.line),
-            '{' => Token::new(TokenType::LBrace, self.ch.into(), self.line),
-            '}' => Token::new(TokenType::RBrace, self.ch.into(), self.line),
-            '[' => Token::new(TokenType::LBracket, self.ch.into(), self.line),
-            ']' => Token::new(TokenType::RBracket, self.ch.into(), self.line),
-            '(' => Token::new(TokenType::LParen, self.ch.into(), self.line),
-            ')' => Token::new(TokenType::RParen, self.ch.into(), self.line),
-            '\0' => Token::new(TokenType::Eof, "".into(), self.line),
-            '"' => Token::new(TokenType::String, self.read_string(), self.line),
+            ';' => Token::new(
+                TokenType::Semicolon,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            ':' => Token::new(
+                TokenType::Colon,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            ',' => Token::new(
+                TokenType::Comma,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '{' => Token::new(
+                TokenType::LBrace,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '}' => Token::new(
+                TokenType::RBrace,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '[' => Token::new(
+                TokenType::LBracket,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            ']' => Token::new(
+                TokenType::RBracket,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '(' => Token::new(
+                TokenType::LParen,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            ')' => Token::new(
+                TokenType::RParen,
+                self.ch.into(),
+                ((self.line, self.col), (0, 0)),
+            ),
+            '\0' => Token::new(TokenType::Eof, "".into(), ((self.line, self.col), (0, 0))),
+            '"' => Token::new(
+                TokenType::String,
+                self.read_string(),
+                ((self.line, self.col), (0, 0)),
+            ),
             _ => {
+                let start_pos = (self.line, self.col);
                 if self.is_letter(self.ch) {
                     let literal = self.read_identifier();
                     let token_type = lookup_ident(&literal);
                     // next line is an early return for the function, not variable assignment
-                    return Token::new(token_type, literal, self.line);
+                    return Token::new(token_type, literal, (start_pos, (0, 0)));
                 }
                 if self.is_digit(self.ch) {
                     let literal = self.read_number();
                     // next line is an early return for the function, not variable assignment
-                    return Token::new(TokenType::Int, literal, self.line);
+                    return Token::new(TokenType::Int, literal, (start_pos, (0, 0)));
                 }
-                Token::new(TokenType::Illegal, self.ch.into(), self.line)
+                Token::new(TokenType::Illegal, self.ch.into(), (start_pos, (0, 0)))
             }
         };
 
@@ -114,20 +194,22 @@ impl Lexer {
     }
 
     fn read_char(&mut self) {
-        if self.read_position >= self.number_of_chars {
-            self.ch = '\0';
+        if self.ch == '\n' {
+            self.line += 1;
+            self.col = 1;
         } else {
-            self.ch = self.input.chars().nth(self.read_position).unwrap();
+            self.col += 1
         }
+        self.ch = match self.input.chars().nth(self.read_position) {
+            Some(ch) => ch,
+            None => '\0',
+        };
         self.position = self.read_position;
         self.read_position += 1;
     }
 
     fn skip_whitespace(&mut self) {
         while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
-            if self.ch == '\n' {
-                self.line += 1;
-            }
             self.read_char();
         }
     }
@@ -166,129 +248,138 @@ mod tests {
     #[test]
     fn test_next_token() {
         // this is the exact same test as in the book
-        let input = "
-        let five = 5;
-        let ten = 10;
+        let input = "if(;)
+let five = 5;
+let ten = 10;
 
-        let add = fn(x, y) {
-                x + y;
-        };
+let add = fn(x, y) {
+        x + y;
+};
 
-        let result = add(five, ten);
-        !-/*5;
-        5 < 10 > 5;
+let result = add(five, ten);
+!-/*5;
+5 < 10 > 5;
 
-        if (5 < 10) {
-            return true;
-        } else {
-            return false;
-        }
+if (5 < 10) {
+    return true;
+} else {
+    return false;
+}
 
-        10 == 10;
-        10 != 9;
-        10 <= 10;
-        10 >= 10;
-        \"foobar\"
-        \"foo bar\"
-        [1, 2];
-        {\"foo\": \"bar\"}";
+10 == 10;
+10 != 9;
+10 <= 10;
+10 >= 10;
+\"foobar\"
+\"foo bar\"
+[1, 2];
+{\"foo\": \"bar\"}
+if(;)";
 
         let tests = [
-            Token::new(TokenType::Let, "let".into(), 2),
-            Token::new(TokenType::Ident, "five".into(), 2),
-            Token::new(TokenType::Assign, "=".into(), 2),
-            Token::new(TokenType::Int, "5".into(), 2),
-            Token::new(TokenType::Semicolon, ";".into(), 2),
-            Token::new(TokenType::Let, "let".into(), 3),
-            Token::new(TokenType::Ident, "ten".into(), 3),
-            Token::new(TokenType::Assign, "=".into(), 3),
-            Token::new(TokenType::Int, "10".into(), 3),
-            Token::new(TokenType::Semicolon, ";".into(), 3),
-            Token::new(TokenType::Let, "let".into(), 5),
-            Token::new(TokenType::Ident, "add".into(), 5),
-            Token::new(TokenType::Assign, "=".into(), 5),
-            Token::new(TokenType::Function, "fn".into(), 5),
-            Token::new(TokenType::LParen, "(".into(), 5),
-            Token::new(TokenType::Ident, "x".into(), 5),
-            Token::new(TokenType::Comma, ",".into(), 5),
-            Token::new(TokenType::Ident, "y".into(), 5),
-            Token::new(TokenType::RParen, ")".into(), 5),
-            Token::new(TokenType::LBrace, "{".into(), 5),
-            Token::new(TokenType::Ident, "x".into(), 6),
-            Token::new(TokenType::Plus, "+".into(), 6),
-            Token::new(TokenType::Ident, "y".into(), 6),
-            Token::new(TokenType::Semicolon, ";".into(), 6),
-            Token::new(TokenType::RBrace, "}".into(), 7),
-            Token::new(TokenType::Semicolon, ";".into(), 7),
-            Token::new(TokenType::Let, "let".into(), 9),
-            Token::new(TokenType::Ident, "result".into(), 9),
-            Token::new(TokenType::Assign, "=".into(), 9),
-            Token::new(TokenType::Ident, "add".into(), 9),
-            Token::new(TokenType::LParen, "(".into(), 9),
-            Token::new(TokenType::Ident, "five".into(), 9),
-            Token::new(TokenType::Comma, ",".into(), 9),
-            Token::new(TokenType::Ident, "ten".into(), 9),
-            Token::new(TokenType::RParen, ")".into(), 9),
-            Token::new(TokenType::Semicolon, ";".into(), 9),
-            Token::new(TokenType::Bang, "!".into(), 10),
-            Token::new(TokenType::Minus, "-".into(), 10),
-            Token::new(TokenType::Slash, "/".into(), 10),
-            Token::new(TokenType::Asterik, "*".into(), 10),
-            Token::new(TokenType::Int, "5".into(), 10),
-            Token::new(TokenType::Semicolon, ";".into(), 10),
-            Token::new(TokenType::Int, "5".into(), 11),
-            Token::new(TokenType::Lt, "<".into(), 11),
-            Token::new(TokenType::Int, "10".into(), 11),
-            Token::new(TokenType::Gt, ">".into(), 11),
-            Token::new(TokenType::Int, "5".into(), 11),
-            Token::new(TokenType::Semicolon, ";".into(), 11),
-            Token::new(TokenType::If, "if".into(), 13),
-            Token::new(TokenType::LParen, "(".into(), 13),
-            Token::new(TokenType::Int, "5".into(), 13),
-            Token::new(TokenType::Lt, "<".into(), 13),
-            Token::new(TokenType::Int, "10".into(), 13),
-            Token::new(TokenType::RParen, ")".into(), 13),
-            Token::new(TokenType::LBrace, "{".into(), 13),
-            Token::new(TokenType::Return, "return".into(), 14),
-            Token::new(TokenType::True, "true".into(), 14),
-            Token::new(TokenType::Semicolon, ";".into(), 14),
-            Token::new(TokenType::RBrace, "}".into(), 15),
-            Token::new(TokenType::Else, "else".into(), 15),
-            Token::new(TokenType::LBrace, "{".into(), 15),
-            Token::new(TokenType::Return, "return".into(), 16),
-            Token::new(TokenType::False, "false".into(), 16),
-            Token::new(TokenType::Semicolon, ";".into(), 16),
-            Token::new(TokenType::RBrace, "}".into(), 17),
-            Token::new(TokenType::Int, "10".into(), 19),
-            Token::new(TokenType::Eq, "==".into(), 19),
-            Token::new(TokenType::Int, "10".into(), 19),
-            Token::new(TokenType::Semicolon, ";".into(), 19),
-            Token::new(TokenType::Int, "10".into(), 20),
-            Token::new(TokenType::NotEq, "!=".into(), 20),
-            Token::new(TokenType::Int, "9".into(), 20),
-            Token::new(TokenType::Semicolon, ";".into(), 20),
-            Token::new(TokenType::Int, "10".into(), 21),
-            Token::new(TokenType::LtEq, "<=".into(), 21),
-            Token::new(TokenType::Int, "10".into(), 21),
-            Token::new(TokenType::Semicolon, ";".into(), 21),
-            Token::new(TokenType::Int, "10".into(), 22),
-            Token::new(TokenType::GtEq, ">=".into(), 22),
-            Token::new(TokenType::Int, "10".into(), 22),
-            Token::new(TokenType::Semicolon, ";".into(), 22),
-            Token::new(TokenType::String, "foobar".into(), 23),
-            Token::new(TokenType::String, "foo bar".into(), 24),
-            Token::new(TokenType::LBracket, "[".into(), 25),
-            Token::new(TokenType::Int, "1".into(), 25),
-            Token::new(TokenType::Comma, ",".into(), 25),
-            Token::new(TokenType::Int, "2".into(), 25),
-            Token::new(TokenType::RBracket, "]".into(), 25),
-            Token::new(TokenType::Semicolon, ";".into(), 25),
-            Token::new(TokenType::LBrace, "{".into(), 26),
-            Token::new(TokenType::String, "foo".into(), 26),
-            Token::new(TokenType::Colon, ":".into(), 26),
-            Token::new(TokenType::String, "bar".into(), 26),
-            Token::new(TokenType::RBrace, "}".into(), 26),
-            Token::new(TokenType::Eof, "".into(), 26),
+            Token::new(TokenType::If, "if".into(), ((1, 1), (0, 0))),
+            Token::new(TokenType::LParen, "(".into(), ((1, 3), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((1, 4), (0, 0))),
+            Token::new(TokenType::RParen, ")".into(), ((1, 5), (0, 0))),
+            Token::new(TokenType::Let, "let".into(), ((2, 1), (0, 0))),
+            Token::new(TokenType::Ident, "five".into(), ((2, 5), (0, 0))),
+            Token::new(TokenType::Assign, "=".into(), ((2, 10), (0, 0))),
+            Token::new(TokenType::Int, "5".into(), ((2, 12), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((2, 13), (0, 0))),
+            Token::new(TokenType::Let, "let".into(), ((3, 1), (0, 0))),
+            Token::new(TokenType::Ident, "ten".into(), ((3, 5), (0, 0))),
+            Token::new(TokenType::Assign, "=".into(), ((3, 9), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((3, 11), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((3, 13), (0, 0))),
+            Token::new(TokenType::Let, "let".into(), ((5, 1), (0, 0))),
+            Token::new(TokenType::Ident, "add".into(), ((5, 5), (0, 0))),
+            Token::new(TokenType::Assign, "=".into(), ((5, 9), (0, 0))),
+            Token::new(TokenType::Function, "fn".into(), ((5, 11), (0, 0))),
+            Token::new(TokenType::LParen, "(".into(), ((5, 13), (0, 0))),
+            Token::new(TokenType::Ident, "x".into(), ((5, 14), (0, 0))),
+            Token::new(TokenType::Comma, ",".into(), ((5, 15), (0, 0))),
+            Token::new(TokenType::Ident, "y".into(), ((5, 17), (0, 0))),
+            Token::new(TokenType::RParen, ")".into(), ((5, 18), (0, 0))),
+            Token::new(TokenType::LBrace, "{".into(), ((5, 20), (0, 0))),
+            Token::new(TokenType::Ident, "x".into(), ((6, 9), (0, 0))),
+            Token::new(TokenType::Plus, "+".into(), ((6, 11), (0, 0))),
+            Token::new(TokenType::Ident, "y".into(), ((6, 13), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((6, 14), (0, 0))),
+            Token::new(TokenType::RBrace, "}".into(), ((7, 1), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((7, 2), (0, 0))),
+            Token::new(TokenType::Let, "let".into(), ((9, 1), (0, 0))),
+            Token::new(TokenType::Ident, "result".into(), ((9, 5), (0, 0))),
+            Token::new(TokenType::Assign, "=".into(), ((9, 12), (0, 0))),
+            Token::new(TokenType::Ident, "add".into(), ((9, 14), (0, 0))),
+            Token::new(TokenType::LParen, "(".into(), ((9, 17), (0, 0))),
+            Token::new(TokenType::Ident, "five".into(), ((9, 18), (0, 0))),
+            Token::new(TokenType::Comma, ",".into(), ((9, 22), (0, 0))),
+            Token::new(TokenType::Ident, "ten".into(), ((9, 24), (0, 0))),
+            Token::new(TokenType::RParen, ")".into(), ((9, 27), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((9, 28), (0, 0))),
+            Token::new(TokenType::Bang, "!".into(), ((10, 1), (0, 0))),
+            Token::new(TokenType::Minus, "-".into(), ((10, 2), (0, 0))),
+            Token::new(TokenType::Slash, "/".into(), ((10, 3), (0, 0))),
+            Token::new(TokenType::Asterik, "*".into(), ((10, 4), (0, 0))),
+            Token::new(TokenType::Int, "5".into(), ((10, 5), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((10, 6), (0, 0))),
+            Token::new(TokenType::Int, "5".into(), ((11, 1), (0, 0))),
+            Token::new(TokenType::Lt, "<".into(), ((11, 3), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((11, 5), (0, 0))),
+            Token::new(TokenType::Gt, ">".into(), ((0, 0), (0, 0))),
+            Token::new(TokenType::Int, "5".into(), ((11, 10), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((11, 11), (0, 0))),
+            Token::new(TokenType::If, "if".into(), ((13, 1), (0, 0))),
+            Token::new(TokenType::LParen, "(".into(), ((13, 4), (0, 0))),
+            Token::new(TokenType::Int, "5".into(), ((13, 5), (0, 0))),
+            Token::new(TokenType::Lt, "<".into(), ((13, 7), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((13, 9), (0, 0))),
+            Token::new(TokenType::RParen, ")".into(), ((13, 11), (0, 0))),
+            Token::new(TokenType::LBrace, "{".into(), ((13, 13), (0, 0))),
+            Token::new(TokenType::Return, "return".into(), ((14, 5), (0, 0))),
+            Token::new(TokenType::True, "true".into(), ((14, 12), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((14, 16), (0, 0))),
+            Token::new(TokenType::RBrace, "}".into(), ((15, 1), (0, 0))),
+            Token::new(TokenType::Else, "else".into(), ((15, 3), (0, 0))),
+            Token::new(TokenType::LBrace, "{".into(), ((15, 8), (0, 0))),
+            Token::new(TokenType::Return, "return".into(), ((16, 5), (0, 0))),
+            Token::new(TokenType::False, "false".into(), ((16, 12), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((16, 17), (0, 0))),
+            Token::new(TokenType::RBrace, "}".into(), ((17, 1), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((19, 1), (0, 0))),
+            Token::new(TokenType::Eq, "==".into(), ((19, 4), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((19, 7), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((19, 9), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((20, 1), (0, 0))),
+            Token::new(TokenType::NotEq, "!=".into(), ((20, 4), (0, 0))),
+            Token::new(TokenType::Int, "9".into(), ((20, 7), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((20, 8), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((21, 1), (0, 0))),
+            Token::new(TokenType::LtEq, "<=".into(), ((21, 4), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((21, 7), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((21, 9), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((22, 1), (0, 0))),
+            Token::new(TokenType::GtEq, ">=".into(), ((0, 0), (0, 0))),
+            Token::new(TokenType::Int, "10".into(), ((22, 7), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((22, 9), (0, 0))),
+            Token::new(TokenType::String, "foobar".into(), ((23, 8), (0, 0))),
+            Token::new(TokenType::String, "foo bar".into(), ((24, 9), (0, 0))),
+            Token::new(TokenType::LBracket, "[".into(), ((25, 1), (0, 0))),
+            Token::new(TokenType::Int, "1".into(), ((25, 2), (0, 0))),
+            Token::new(TokenType::Comma, ",".into(), ((25, 3), (0, 0))),
+            Token::new(TokenType::Int, "2".into(), ((25, 5), (0, 0))),
+            Token::new(TokenType::RBracket, "]".into(), ((25, 6), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((25, 7), (0, 0))),
+            Token::new(TokenType::LBrace, "{".into(), ((26, 1), (0, 0))),
+            Token::new(TokenType::String, "foo".into(), ((26, 6), (0, 0))),
+            Token::new(TokenType::Colon, ":".into(), ((26, 7), (0, 0))),
+            Token::new(TokenType::String, "bar".into(), ((26, 13), (0, 0))),
+            Token::new(TokenType::RBrace, "}".into(), ((26, 14), (0, 0))),
+            Token::new(TokenType::If, "if".into(), ((27, 1), (0, 0))),
+            Token::new(TokenType::LParen, "(".into(), ((27, 3), (0, 0))),
+            Token::new(TokenType::Semicolon, ";".into(), ((27, 4), (0, 0))),
+            Token::new(TokenType::RParen, ")".into(), ((27, 5), (0, 0))),
+            Token::new(TokenType::Eof, "".into(), ((27, 6), (0, 0))),
         ];
 
         let mut lexer = Lexer::new(input.into());
@@ -296,7 +387,32 @@ mod tests {
             let token = lexer.next_token();
             assert_eq!(token.token_type, expected_token.token_type);
             assert_eq!(token.literal, expected_token.literal);
-            assert_eq!(token.line, expected_token.line);
+
+            let (expected_start_line, expected_start_col) = expected_token.position.0;
+            let (start_line, start_col) = token.position.0;
+            assert_eq!(
+                expected_start_line, start_line,
+                "Expected token to start at line {}, but got line {}",
+                expected_start_line, start_line
+            );
+            assert_eq!(
+                expected_start_col, start_col,
+                "Expected token to start at col {}, but got col {}",
+                expected_start_col, start_col
+            );
+
+            let (expected_end_line, expected_end_col) = expected_token.position.1;
+            let (end_line, end_col) = token.position.1;
+            assert_eq!(
+                expected_end_line, end_line,
+                "Expected token to end at line {}, but got line {}",
+                expected_end_line, end_line
+            );
+            assert_eq!(
+                expected_end_col, end_col,
+                "Expected token to end at col {}, but got col {}",
+                expected_end_col, end_col
+            );
         }
     }
 }

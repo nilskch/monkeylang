@@ -826,7 +826,7 @@ fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr, got={}", stmt),
     };
 
     let hash_expr = match &expr_stmt.expression {
@@ -921,7 +921,7 @@ fn test_parsing_hash_literal_with_expression() -> Result<(), ParserError> {
             _ => unreachable!(),
         };
 
-        match &*string_literal.value {
+        match string_literal.value.as_str() {
             "one" => test_infix_expression(
                 value,
                 ExpectedValue::Integer(0),
