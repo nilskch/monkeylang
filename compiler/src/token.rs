@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
-pub type TokenPosition = ((i64, i64), (i64, i64));
+pub type TokenPosition = (i64, i64);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub enum TokenType {
@@ -120,7 +120,7 @@ impl Token {
         Token {
             token_type,
             literal,
-            position: ((0, 0), (0, 0)),
+            position: (0, 0),
         }
     }
 }

@@ -38,7 +38,7 @@ pub fn start() {
                 Object::Null => continue,
                 _ => println!("{}", result.inspect()),
             },
-            Err(err) => println!("ERROR: {}", err),
+            Err(err) => println!("{}", err),
         }
     }
 }

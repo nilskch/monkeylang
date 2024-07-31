@@ -19,7 +19,7 @@ impl Display for ParserError {
         write!(
             f,
             "ERROR in line {}, col {}: {}",
-            self.pos.0 .0, self.pos.0 .1, self.msg
+            self.pos.0, self.pos.1, self.msg
         )
     }
 }
