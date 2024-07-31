@@ -73,9 +73,9 @@ impl Object {
             Object::Integer(value) => format!("{}", value),
             Object::ReturnValue(value) => format!("{}", value),
             Object::Function(function) => format!("{}", function),
-            Object::String(value) => format!("\"{}\"", value),
-            Object::Array(arr) => format!("{}", Object::Array(arr.clone())),
-            Object::Hash(hash) => format!("{}", Object::Hash(hash.clone())),
+            Object::String(_) => format!("{}", self),
+            Object::Array(_) => format!("{}", self),
+            Object::Hash(_) => format!("{}", self),
             Object::Builtin(_) => format!("builtin function"),
             Object::Null => String::from("null"),
         }
