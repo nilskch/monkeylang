@@ -16,33 +16,33 @@ use std::rc::Rc;
 type EvaluationResult = Result<Object, EvaluationError>;
 
 pub fn eval_program(program: Program, env: &Env) -> EvaluationResult {
-    let mut result = Ok(Object::Null);
+    let mut result = Object::Null;
 
     for stmt in program.statements {
         let value = eval_statement(stmt, env)?;
 
         match value {
             Object::ReturnValue(value) => return Ok(*value),
-            _ => result = Ok(value),
+            _ => result = value,
         }
     }
 
-    result
+    Ok(result)
 }
 
 fn eval_block_statement(block_stmt: BlockStatement, env: &Env) -> EvaluationResult {
-    let mut result = Ok(Object::Null);
+    let mut result = Object::Null;
 
     for stmt in block_stmt.statements {
         let value = eval_statement(stmt, env)?;
 
         match value {
             Object::ReturnValue(_) => return Ok(value),
-            _ => result = Ok(value),
+            _ => result = value,
         }
     }
 
-    result
+    Ok(result)
 }
 
 fn eval_statement(stmt: Statement, env: &Env) -> EvaluationResult {
@@ -54,7 +54,6 @@ fn eval_statement(stmt: Statement, env: &Env) -> EvaluationResult {
         }
         Statement::Let(let_stmt) => {
             let value = eval_expression(let_stmt.value, env)?;
-
             env.borrow_mut().set(let_stmt.name.value.to_string(), value);
             Ok(Object::Null)
         }
