@@ -10,7 +10,7 @@ enum ExpectedValue {
 }
 
 #[test]
-fn test_eval_integer_expression() {
+fn test_eval_integer_expression() -> Result<(), EvaluationError> {
     let tests = [
         ("5", 5),
         ("10", 10),
@@ -30,9 +30,10 @@ fn test_eval_integer_expression() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_integer_object(&evaluated, expected);
     }
+    Ok(())
 }
 
 fn test_eval(input: &str) -> EvaluationResult {
@@ -61,7 +62,7 @@ fn test_integer_object(object: &Object, expected: i64) {
 }
 
 #[test]
-fn test_boolean_expression() {
+fn test_boolean_expression() -> Result<(), EvaluationError> {
     let tests = [
         ("true", true),
         ("false", false),
@@ -88,9 +89,10 @@ fn test_boolean_expression() {
         ("(1 > 2) == false", true),
     ];
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_boolean_object(evaluated, expected);
     }
+    Ok(())
 }
 
 fn test_boolean_object(object: Object, expected: bool) {
@@ -107,7 +109,7 @@ fn test_boolean_object(object: Object, expected: bool) {
 }
 
 #[test]
-fn test_bang_operator() {
+fn test_bang_operator() -> Result<(), EvaluationError> {
     let tests = [
         ("!true", false),
         ("!false", true),
@@ -117,13 +119,14 @@ fn test_bang_operator() {
         ("!!5", true),
     ];
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_boolean_object(evaluated, expected);
     }
+    Ok(())
 }
 
 #[test]
-fn test_if_else_expressions() {
+fn test_if_else_expressions() -> Result<(), EvaluationError> {
     let tests = [
         ("if (true) { 10 }", Object::Integer(10)),
         ("if (false) { 10 }", Object::Null),
@@ -135,9 +138,10 @@ fn test_if_else_expressions() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_object(evaluated, expected);
     }
+    Ok(())
 }
 
 fn test_object(object: Object, expected: Object) {
@@ -166,7 +170,7 @@ fn test_null_object(object: &Object) {
 }
 
 #[test]
-fn test_return_statements() {
+fn test_return_statements() -> Result<(), EvaluationError> {
     let tests = [
         ("return 10;", 10),
         ("return 10; 9;", 10),
@@ -186,9 +190,10 @@ fn test_return_statements() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_integer_object(&evaluated, expected);
     }
+    Ok(())
 }
 
 #[test]
@@ -226,7 +231,7 @@ fn test_error_handling() {
 }
 
 #[test]
-fn test_let_statements() {
+fn test_let_statements() -> Result<(), EvaluationError> {
     let tests = [
         ("let a = 5; a;", 5),
         ("let a = 5 * 5; a;", 25),
@@ -235,15 +240,16 @@ fn test_let_statements() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         test_integer_object(&evaluated, expected);
     }
+    Ok(())
 }
 
 #[test]
-fn test_function_object() {
+fn test_function_object() -> Result<(), EvaluationError> {
     let input = "fn(x) { x + 1;}";
-    let evaluated = test_eval(input).unwrap();
+    let evaluated = test_eval(input)?;
 
     let function = match evaluated {
         Object::Function(function) => function,
@@ -272,6 +278,7 @@ fn test_function_object() {
         "wrong function body. wanted='{}'. got='{}'",
         expected_body, body
     );
+    Ok(())
 }
 
 #[test]
@@ -291,9 +298,9 @@ fn test_function_application() {
 }
 
 #[test]
-fn test_string_literal() {
+fn test_string_literal() -> Result<(), EvaluationError> {
     let input = "\"Hello World!\"";
-    let evaluated = test_eval(input).unwrap();
+    let evaluated = test_eval(input)?;
 
     let string_literal = match evaluated {
         Object::String(string_literal) => string_literal,
@@ -306,12 +313,13 @@ fn test_string_literal() {
         "String has the wrong value. expected='{}'. got='{}'",
         expected, string_literal
     );
+    Ok(())
 }
 
 #[test]
-fn test_string_concatenation() {
+fn test_string_concatenation() -> Result<(), EvaluationError> {
     let input = "\"Hello\" + \" \" + \"World\" + \"!\"";
-    let evaluated = test_eval(input).unwrap();
+    let evaluated = test_eval(input)?;
 
     let string_literal = match evaluated {
         Object::String(string_literal) => string_literal,
@@ -324,6 +332,7 @@ fn test_string_concatenation() {
         "String has the wrong value. expected='{}'. got='{}'",
         expected, string_literal
     );
+    Ok(())
 }
 
 #[test]
@@ -361,9 +370,9 @@ fn test_builtin_functions() {
 }
 
 #[test]
-fn test_array_literals() {
+fn test_array_literals() -> Result<(), EvaluationError> {
     let input = "[1, 2 * 2, 3 + 3]";
-    let evaluated = test_eval(input).unwrap();
+    let evaluated = test_eval(input)?;
 
     let arr = match evaluated {
         Object::Array(arr) => arr,
@@ -379,10 +388,11 @@ fn test_array_literals() {
     test_integer_object(&arr[0], 1);
     test_integer_object(&arr[1], 4);
     test_integer_object(&arr[2], 6);
+    Ok(())
 }
 
 #[test]
-fn test_array_index_expressions() {
+fn test_array_index_expressions() -> Result<(), EvaluationError> {
     let tests = [
         ("[1, 2, 3][0]", ExpectedValue::Integer(1)),
         ("[1, 2, 3][1]", ExpectedValue::Integer(2)),
@@ -406,7 +416,7 @@ fn test_array_index_expressions() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
 
         match expected {
             ExpectedValue::Integer(val) => test_integer_object(&evaluated, val),
@@ -420,10 +430,11 @@ fn test_array_index_expressions() {
             _ => continue,
         }
     }
+    Ok(())
 }
 
 #[test]
-fn test_hash_literals() {
+fn test_hash_literals() -> Result<(), EvaluationError> {
     let input = "
         let two = \"two\";
         {
@@ -436,7 +447,7 @@ fn test_hash_literals() {
         }
         ";
 
-    let evaluated = test_eval(input).unwrap();
+    let evaluated = test_eval(input)?;
     let hash_obj = match evaluated {
         Object::Hash(hash_obj) => hash_obj,
         _ => unreachable!(),
@@ -466,10 +477,11 @@ fn test_hash_literals() {
 
         test_integer_object(object, expected_value)
     }
+    Ok(())
 }
 
 #[test]
-fn test_hash_index_expression() {
+fn test_hash_index_expression() -> Result<(), EvaluationError> {
     let tests = [
         ("{\"foo\": 5}[\"foo\"]", ExpectedValue::Integer(5)),
         (
@@ -483,11 +495,12 @@ fn test_hash_index_expression() {
     ];
 
     for (input, expected) in tests {
-        let evaluated = test_eval(input).unwrap();
+        let evaluated = test_eval(input)?;
         match expected {
             ExpectedValue::Integer(val) => test_integer_object(&evaluated, val),
             ExpectedValue::Null => test_null_object(&evaluated),
             _ => unreachable!(),
         }
     }
+    Ok(())
 }

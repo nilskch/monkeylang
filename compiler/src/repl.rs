@@ -1,9 +1,8 @@
+use crate::evaluator::eval_program;
+use crate::lexer::Lexer;
 use crate::object::environment::Environment;
-
-use super::evaluator::eval_program;
-use super::lexer::Lexer;
-use super::object::Object;
-use super::parser::Parser;
+use crate::object::Object;
+use crate::parser::Parser;
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;
