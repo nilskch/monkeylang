@@ -37,6 +37,21 @@ impl Parser {
         self.peek_token = self.lexer.next_token();
     }
 
+    fn expect_peek(&mut self, token_type: &TokenType) -> Result<(), ParserError> {
+        if self.peek_token_is(token_type) {
+            self.next_token();
+            Ok(())
+        } else {
+            Err(ParserError::new(
+                format!(
+                    "expected next token to be '{}', but got '{}' instead",
+                    token_type, self.peek_token.token_type
+                ),
+                self.peek_token.position,
+            ))
+        }
+    }
+
     pub fn parse_program(&mut self) -> Result<Program, ParserError> {
         let mut program = Program::new();
 
@@ -55,6 +70,26 @@ impl Parser {
             TokenType::Return => self.parse_return_statement(),
             _ => self.parse_expression_statement(),
         }
+    }
+
+    fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
+        let token = self.cur_token.clone();
+
+        self.expect_peek(&TokenType::Ident)?;
+
+        let name = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
+
+        self.expect_peek(&TokenType::Assign)?;
+
+        self.next_token();
+
+        let value = self.parse_expression(Precedence::Lowest)?;
+
+        if self.peek_token_is(&TokenType::Semicolon) {
+            self.next_token()
+        }
+
+        Ok(Statement::Let(LetStatement::new(token, name, value)))
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
@@ -235,47 +270,12 @@ impl Parser {
         )))
     }
 
-    fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
-        let token = self.cur_token.clone();
-
-        self.expect_peek(&TokenType::Ident)?;
-
-        let name = Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
-
-        self.expect_peek(&TokenType::Assign)?;
-
-        self.next_token();
-
-        let value = self.parse_expression(Precedence::Lowest)?;
-
-        if !self.cur_token_is(&TokenType::Semicolon) {
-            self.next_token()
-        }
-
-        Ok(Statement::Let(LetStatement::new(token, name, value)))
-    }
-
     fn cur_token_is(&self, token_type: &TokenType) -> bool {
         self.cur_token.token_type == *token_type
     }
 
     fn peek_token_is(&self, token_type: &TokenType) -> bool {
         self.peek_token.token_type == *token_type
-    }
-
-    fn expect_peek(&mut self, token_type: &TokenType) -> Result<(), ParserError> {
-        if self.peek_token_is(token_type) {
-            self.next_token();
-            Ok(())
-        } else {
-            Err(ParserError::new(
-                format!(
-                    "expected next token to be '{}', but got '{}' instead",
-                    token_type, self.peek_token.token_type
-                ),
-                self.peek_token.position,
-            ))
-        }
     }
 
     fn expect_cur_token(&self, token_type: &TokenType) -> Result<(), ParserError> {
@@ -285,9 +285,9 @@ impl Parser {
             Err(ParserError::new(
                 format!(
                     "expected next token to be '{}', but got '{}' instead",
-                    token_type, self.peek_token.token_type
+                    token_type, self.cur_token.token_type
                 ),
-                self.peek_token.position,
+                self.cur_token.position,
             ))
         }
     }

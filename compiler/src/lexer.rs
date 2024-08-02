@@ -45,7 +45,14 @@ impl Lexer {
                     Token::new(TokenType::Bang, self.ch.into(), (self.line, self.col))
                 }
             }
-            '/' => Token::new(TokenType::Slash, self.ch.into(), (self.line, self.col)),
+            '/' => {
+                if self.peek_char() == '/' {
+                    self.skip_line();
+                    return self.next_token();
+                } else {
+                    Token::new(TokenType::Slash, self.ch.into(), (self.line, self.col))
+                }
+            }
             '*' => Token::new(TokenType::Asterik, self.ch.into(), (self.line, self.col)),
             '<' => {
                 if self.peek_char() == '=' {
@@ -128,6 +135,12 @@ impl Lexer {
         self.read_position += 1;
     }
 
+    fn skip_line(&mut self) {
+        while self.ch != '\n' && self.ch != '\0' {
+            self.read_char();
+        }
+    }
+
     fn skip_whitespace(&mut self) {
         while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
             self.read_char();
@@ -174,7 +187,7 @@ let ten = 10;
 
 let add = fn(x, y) {
         x + y;
-};
+}; //
 
 let result = add(five, ten);
 !-/*5;
@@ -182,18 +195,21 @@ let result = add(five, ten);
 
 if (5 < 10) {
     return true;
-} else {
+} else { // comment foobar
     return false;
 }
 
 10 == 10;
-10 != 9;
-10 <= 10;
+10 != 9; // some comment
+10 <= 10; // whatever
 10 >= 10;
 \"foobar\"
 \"foo bar\"
 [1, 2];
-{\"foo\": \"bar\"}
+{\"foo\": \"bar\"} // sd
+// foo
+// bar
+// blue
 if(;)";
 
         let tests = [
@@ -295,11 +311,11 @@ if(;)";
             Token::new(TokenType::Colon, ":".into(), (26, 7)),
             Token::new(TokenType::String, "bar".into(), (26, 13)),
             Token::new(TokenType::RBrace, "}".into(), (26, 14)),
-            Token::new(TokenType::If, "if".into(), (27, 1)),
-            Token::new(TokenType::LParen, "(".into(), (27, 3)),
-            Token::new(TokenType::Semicolon, ";".into(), (27, 4)),
-            Token::new(TokenType::RParen, ")".into(), (27, 5)),
-            Token::new(TokenType::Eof, "".into(), (27, 6)),
+            Token::new(TokenType::If, "if".into(), (30, 1)),
+            Token::new(TokenType::LParen, "(".into(), (30, 3)),
+            Token::new(TokenType::Semicolon, ";".into(), (30, 4)),
+            Token::new(TokenType::RParen, ")".into(), (30, 5)),
+            Token::new(TokenType::Eof, "".into(), (30, 6)),
         ];
 
         let mut lexer = Lexer::new(input.into());
