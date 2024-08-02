@@ -51,7 +51,7 @@ fn test_eval(input: &str) -> EvaluationResult {
 fn test_integer_object(object: &Object, expected: i64) {
     let integer_value = match *object {
         Object::Integer(integer_value) => integer_value,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Integer"),
     };
 
     assert_eq!(
@@ -102,7 +102,7 @@ fn test_boolean_expression() -> Result<(), EvaluationError> {
 fn test_boolean_object(object: Object, expected: bool) {
     let boolean_value = match object {
         Object::Boolean(boolean_value) => boolean_value,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Boolean"),
     };
 
     assert_eq!(
@@ -161,7 +161,7 @@ fn test_object(object: Object, expected: Object) {
     match expected {
         Object::Integer(value) => test_integer_object(&object, value),
         Object::Null => test_null_object(&object),
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Integer or Object::Null"),
     }
 }
 
@@ -222,7 +222,7 @@ fn test_error_handling() {
 
     for (input, expected) in tests {
         let err = match test_eval(input) {
-            Ok(_) => unreachable!(),
+            Ok(_) => panic!("Expected to get an EvaluationError"),
             Err(err) => err,
         };
 
@@ -257,7 +257,7 @@ fn test_function_object() -> Result<(), EvaluationError> {
 
     let function = match evaluated {
         Object::Function(function) => function,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Function"),
     };
 
     assert_eq!(
@@ -308,7 +308,7 @@ fn test_string_literal() -> Result<(), EvaluationError> {
 
     let string_literal = match evaluated {
         Object::String(string_literal) => string_literal,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::String"),
     };
 
     let expected = "Hello World!";
@@ -327,7 +327,7 @@ fn test_string_concatenation() -> Result<(), EvaluationError> {
 
     let string_literal = match evaluated {
         Object::String(string_literal) => string_literal,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::String"),
     };
 
     let expected = "Hello World!";
@@ -380,7 +380,7 @@ fn test_array_literals() -> Result<(), EvaluationError> {
 
     let arr = match evaluated {
         Object::Array(arr) => arr,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Array"),
     };
 
     assert_eq!(
@@ -454,7 +454,7 @@ fn test_hash_literals() -> Result<(), EvaluationError> {
     let evaluated = test_eval(input)?;
     let hash_obj = match evaluated {
         Object::Hash(hash_obj) => hash_obj,
-        _ => unreachable!(),
+        _ => panic!("Expected Object::Hash"),
     };
 
     let mut expected = HashMap::new();
@@ -476,7 +476,7 @@ fn test_hash_literals() -> Result<(), EvaluationError> {
     for (expected_key, expected_value) in expected.into_iter() {
         let object = match hash_obj.get(&expected_key) {
             Some(value) => value,
-            None => unreachable!(),
+            _ => panic!("Expected to find value in hash map"),
         };
 
         test_integer_object(object, expected_value)
