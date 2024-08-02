@@ -3,8 +3,8 @@ use crate::token::TokenType;
 #[derive(Clone, PartialEq, PartialOrd)]
 pub enum Precedence {
     Lowest = 0,
-    Equals, // ==
-    AndOr,
+    AndOr,       // && or ||
+    Equals,      // ==
     LessGreater, // > or < or <= or >=
     Sum,         // +
     Product,     // *

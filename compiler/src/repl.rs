@@ -11,8 +11,9 @@ use std::rc::Rc;
 const PROMPT: &str = ">> ";
 
 pub fn start() {
-    let env = &Rc::from(RefCell::new(Environment::new()));
+    println!("Welcome to the Monkey Programming Language!");
 
+    let env = &Rc::from(RefCell::new(Environment::new()));
     loop {
         print!("{}", PROMPT);
         io::stdout().flush().unwrap();

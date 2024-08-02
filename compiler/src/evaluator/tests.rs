@@ -87,8 +87,10 @@ fn test_boolean_expression() -> Result<(), EvaluationError> {
         ("(1 < 2) == false", false),
         ("(1 > 2) == true", false),
         ("(1 > 2) == false", true),
-        ("1 > 2 && 2 > 1 == false", true),
-        ("1 > 2 || 2 > 1 == false", false),
+        ("1 > 2 && 2 < 1 == false", false),
+        ("1 > 2 || 2 < 1 == false", true),
+        ("(1 > 2 && 2 > 1) == false", true),
+        ("(1 > 2 || 2 > 1) == false", false),
     ];
     for (input, expected) in tests {
         let evaluated = test_eval(input)?;

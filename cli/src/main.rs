@@ -14,7 +14,8 @@ fn main() {
                 .arg(
                     Arg::new("file")
                         .help("Path to the .mky file.")
-                        .action(ArgAction::Set),
+                        .action(ArgAction::Set)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -23,7 +24,8 @@ fn main() {
                 .arg(
                     Arg::new("file")
                         .help("Path to the .mky file.")
-                        .action(ArgAction::Set),
+                        .action(ArgAction::Set)
+                        .required(true),
                 ),
         )
         .after_help(
@@ -31,8 +33,15 @@ fn main() {
         )
         .get_matches();
 
-    if !matches.args_present() {
-        println!("Welcome to the Monkey Programming Language!");
-        return compiler::repl::start();
+    if let Some(matches) = matches.subcommand_matches("run") {
+        let file_name = matches.get_one::<String>("file").unwrap();
+        return run::run(file_name);
     }
+
+    if let Some(matches) = matches.subcommand_matches("fmt") {
+        let file_name = matches.get_one::<String>("file").unwrap();
+        return fmt::fmt(file_name);
+    }
+
+    compiler::repl::start();
 }
