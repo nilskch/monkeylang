@@ -13,7 +13,7 @@ fn main() {
                 .about("Run monkey code from a file")
                 .arg(
                     Arg::new("file")
-                        .help("Path to the .mky file.")
+                        .help("Path to the .mky file")
                         .action(ArgAction::Set)
                         .required(true),
                 ),
@@ -23,7 +23,7 @@ fn main() {
                 .about("Format monkey code in a file")
                 .arg(
                     Arg::new("file")
-                        .help("Path to the .mky file.")
+                        .help("Path to the .mky file")
                         .action(ArgAction::Set)
                         .required(true),
                 ),

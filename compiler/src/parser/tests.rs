@@ -34,7 +34,7 @@ fn test_let_statements() -> Result<(), ParserError> {
 
         let let_stmt = match stmt {
             Statement::Let(let_stmt) => let_stmt,
-            _ => unreachable!(),
+            _ => panic!("Expected Statement::Let"),
         };
 
         test_literal_expression(&let_stmt.value, expected)
@@ -52,7 +52,7 @@ fn test_let_statement(stmt: &Statement, name: &str) {
 
     let let_stmt = match stmt {
         Statement::Let(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Let"),
     };
 
     let stmt_name = &let_stmt.name.value;
@@ -96,7 +96,7 @@ fn test_return_statements() -> Result<(), ParserError> {
 
         let return_stmt = match stmt {
             Statement::Return(stmt) => stmt,
-            _ => unreachable!(),
+            _ => panic!("Expected Statement::Return"),
         };
 
         test_literal_expression(&return_stmt.return_value, expected)
@@ -128,12 +128,12 @@ fn test_indentifier_expression() -> Result<(), ParserError> {
 
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let ident = match &expr_stmt.expression {
         Expression::Ident(ident) => ident,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Ident"),
     };
 
     assert_eq!(
@@ -168,12 +168,12 @@ fn test_integer_literal_expression() -> Result<(), ParserError> {
 
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let integer = match &expr_stmt.expression {
         Expression::Integer(integer) => integer,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Integer"),
     };
 
     assert_eq!(
@@ -208,12 +208,12 @@ fn test_parsing_prefix_expressions() -> Result<(), ParserError> {
         let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
-            _ => unreachable!(),
+            _ => panic!("Expected Statement::Expr"),
         };
 
         let prefix_expr = match &expr_stmt.expression {
             Expression::Prefix(prefix_expr) => prefix_expr,
-            _ => unreachable!(),
+            _ => panic!("Expected Expression::Prefix"),
         };
 
         assert_eq!(
@@ -238,7 +238,7 @@ fn test_integer_literal(expr: &Expression, value: i64) {
 
     let integer = match expr {
         Expression::Integer(integer) => integer,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Integer"),
     };
 
     assert_eq!(
@@ -358,7 +358,7 @@ fn test_parsing_infix_expressions() -> Result<(), ParserError> {
         let stmt = &program.statements[0];
         let expr_stmt = match stmt {
             Statement::Expr(stmt) => stmt,
-            _ => unreachable!(),
+            _ => panic!("Expected Statement::Exp"),
         };
 
         test_infix_expression(&expr_stmt.expression, left_value, operator, right_value)
@@ -437,7 +437,7 @@ fn test_identifier(expr: &Expression, value: String) {
 
     let ident = match expr {
         Expression::Ident(ident) => ident,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Ident"),
     };
 
     assert_eq!(
@@ -466,7 +466,7 @@ fn test_boolean_literal(expr: &Expression, value: bool) {
 
     let boolean_expr = match expr {
         Expression::Boolean(boolean_expr) => boolean_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Boolean"),
     };
 
     assert_eq!(
@@ -484,7 +484,7 @@ fn test_infix_expression(
 ) {
     let infix_expr = match expr {
         Expression::Infix(infix_expr) => infix_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Infix"),
     };
 
     test_literal_expression(&*infix_expr.left, left);
@@ -514,12 +514,12 @@ fn test_if_expression() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let if_expr = match &expr_stmt.expression {
         Expression::IfElse(if_expr) => if_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::IfElse"),
     };
 
     test_infix_expression(
@@ -539,13 +539,13 @@ fn test_if_expression() -> Result<(), ParserError> {
     let stmt = &if_expr.consequence.statements[0];
     let consequence = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     test_identifier(&consequence.expression, "x".to_string());
 
     if let Some(_) = if_expr.alternative {
-        unreachable!();
+        panic!("if_expr.alternative supposed to be empty");
     }
 
     Ok(())
@@ -568,12 +568,12 @@ fn test_if_else_expression() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let if_expr = match &expr_stmt.expression {
         Expression::IfElse(if_expr) => if_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::IfElse"),
     };
 
     test_infix_expression(
@@ -593,14 +593,14 @@ fn test_if_else_expression() -> Result<(), ParserError> {
     let stmt = &if_expr.consequence.statements[0];
     let consequence = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     test_identifier(&consequence.expression, "x".to_string());
 
     let alternative = match &if_expr.alternative {
         Some(alternative) => alternative,
-        None => unreachable!(),
+        _ => panic!("Expected a block statement"),
     };
 
     let num_stmts = alternative.statements.len();
@@ -613,7 +613,7 @@ fn test_if_else_expression() -> Result<(), ParserError> {
     let stmt = &alternative.statements[0];
     let alternative = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     test_identifier(&alternative.expression, String::from("y"));
@@ -637,12 +637,12 @@ fn test_parsing_function_literal() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let func_literal = match &expr_stmt.expression {
         Expression::Function(func_literal) => func_literal,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Function"),
     };
 
     assert_eq!(
@@ -671,7 +671,7 @@ fn test_parsing_function_literal() -> Result<(), ParserError> {
     let stmt = &func_literal.body.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     test_infix_expression(
@@ -700,12 +700,12 @@ fn test_object_expression_parsing() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let object_expr = match &expr_stmt.expression {
         Expression::Call(object_expr) => object_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Call"),
     };
 
     test_identifier(&*object_expr.function, String::from("add"));
@@ -742,12 +742,12 @@ fn test_parsing_string_literal() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let string_literal = match &expr_stmt.expression {
         Expression::String(string_literal) => string_literal,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::String"),
     };
 
     let expected = "hello world";
@@ -769,12 +769,12 @@ fn test_parsing_array_literals() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let array_literal = match &expr_stmt.expression {
         Expression::Array(array_literal) => array_literal,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Array"),
     };
 
     assert_eq!(
@@ -810,12 +810,12 @@ fn test_parsing_index_expressions() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let index_expr = match &expr_stmt.expression {
         Expression::Index(index) => index,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Index"),
     };
 
     test_identifier(&index_expr.left, String::from("myArray"));
@@ -843,7 +843,7 @@ fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
 
     let hash_expr = match &expr_stmt.expression {
         Expression::Hash(hash_expr) => hash_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Hash"),
     };
 
     assert_eq!(
@@ -861,12 +861,12 @@ fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
     for (key, value) in hash_expr.pairs.iter() {
         let string_literal = match key {
             Expression::String(string_literal) => string_literal,
-            _ => unreachable!(),
+            _ => panic!("Expected Expression::String"),
         };
 
         let expected_value = match expected.get(&string_literal.value) {
             Some(val) => *val,
-            None => unreachable!(),
+            None => panic!("Expected to find a value"),
         };
 
         test_integer_literal(value, expected_value)
@@ -884,12 +884,12 @@ fn test_parsing_empty_hash_literal() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let hash_expr = match &expr_stmt.expression {
         Expression::Hash(hash_expr) => hash_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Hash"),
     };
 
     assert_eq!(
@@ -912,12 +912,12 @@ fn test_parsing_hash_literal_with_expression() -> Result<(), ParserError> {
     let stmt = &program.statements[0];
     let expr_stmt = match stmt {
         Statement::Expr(stmt) => stmt,
-        _ => unreachable!(),
+        _ => panic!("Expected Statement::Expr"),
     };
 
     let hash_expr = match &expr_stmt.expression {
         Expression::Hash(hash_expr) => hash_expr,
-        _ => unreachable!(),
+        _ => panic!("Expected Expression::Hash"),
     };
 
     assert_eq!(
@@ -930,7 +930,7 @@ fn test_parsing_hash_literal_with_expression() -> Result<(), ParserError> {
     for (key, value) in hash_expr.pairs.iter() {
         let string_literal = match key {
             Expression::String(string_literal) => string_literal,
-            _ => unreachable!(),
+            _ => panic!("Expected Expression::String"),
         };
 
         match string_literal.value.as_str() {
@@ -952,7 +952,7 @@ fn test_parsing_hash_literal_with_expression() -> Result<(), ParserError> {
                 "/",
                 ExpectedValue::Integer(5),
             ),
-            _ => unreachable!(),
+            _ => panic!("Expected, 'one', 'two', or 'three'"),
         };
     }
     Ok(())
