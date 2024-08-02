@@ -143,6 +143,8 @@ impl Parser {
                 | TokenType::Minus
                 | TokenType::Slash
                 | TokenType::Asterik
+                | TokenType::And
+                | TokenType::Or
                 | TokenType::Eq
                 | TokenType::NotEq
                 | TokenType::Lt

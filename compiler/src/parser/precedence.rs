@@ -3,7 +3,8 @@ use crate::token::TokenType;
 #[derive(Clone, PartialEq, PartialOrd)]
 pub enum Precedence {
     Lowest = 0,
-    Equals,      // ==
+    Equals, // ==
+    AndOr,
     LessGreater, // > or < or <= or >=
     Sum,         // +
     Product,     // *
@@ -15,16 +16,13 @@ pub enum Precedence {
 impl Precedence {
     pub fn get(token_type: &TokenType) -> Option<Precedence> {
         match token_type {
-            TokenType::Eq => Some(Precedence::Equals),
-            TokenType::NotEq => Some(Precedence::Equals),
-            TokenType::Lt => Some(Precedence::LessGreater),
-            TokenType::Gt => Some(Precedence::LessGreater),
-            TokenType::LtEq => Some(Precedence::LessGreater),
-            TokenType::GtEq => Some(Precedence::LessGreater),
-            TokenType::Plus => Some(Precedence::Sum),
-            TokenType::Minus => Some(Precedence::Sum),
-            TokenType::Slash => Some(Precedence::Product),
-            TokenType::Asterik => Some(Precedence::Product),
+            TokenType::And | TokenType::Or => Some(Precedence::AndOr),
+            TokenType::Eq | TokenType::NotEq => Some(Precedence::Equals),
+            TokenType::Lt | TokenType::Gt | TokenType::LtEq | TokenType::GtEq => {
+                Some(Precedence::LessGreater)
+            }
+            TokenType::Plus | TokenType::Minus => Some(Precedence::Sum),
+            TokenType::Slash | TokenType::Asterik => Some(Precedence::Product),
             TokenType::LParen => Some(Precedence::Object),
             TokenType::LBracket => Some(Precedence::Index),
             _ => None,

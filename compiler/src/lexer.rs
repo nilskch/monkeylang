@@ -53,6 +53,24 @@ impl Lexer {
                     Token::new(TokenType::Slash, self.ch.into(), (self.line, self.col))
                 }
             }
+            '&' => {
+                let position = (self.line, self.col);
+                if self.peek_char() == '&' {
+                    self.read_char();
+                    Token::new(TokenType::And, "&&".into(), position)
+                } else {
+                    Token::new(TokenType::Illegal, self.ch.into(), position)
+                }
+            }
+            '|' => {
+                let position = (self.line, self.col);
+                if self.peek_char() == '|' {
+                    self.read_char();
+                    Token::new(TokenType::Or, "||".into(), position)
+                } else {
+                    Token::new(TokenType::Illegal, self.ch.into(), position)
+                }
+            }
             '*' => Token::new(TokenType::Asterik, self.ch.into(), (self.line, self.col)),
             '<' => {
                 if self.peek_char() == '=' {
@@ -210,7 +228,9 @@ if (5 < 10) {
 // foo
 // bar
 // blue
-if(;)";
+if(;)
+&&
+|| &&";
 
         let tests = [
             Token::new(TokenType::If, "if".into(), (1, 1)),
@@ -315,7 +335,10 @@ if(;)";
             Token::new(TokenType::LParen, "(".into(), (30, 3)),
             Token::new(TokenType::Semicolon, ";".into(), (30, 4)),
             Token::new(TokenType::RParen, ")".into(), (30, 5)),
-            Token::new(TokenType::Eof, "".into(), (30, 6)),
+            Token::new(TokenType::And, "&&".into(), (31, 1)),
+            Token::new(TokenType::Or, "||".into(), (32, 1)),
+            Token::new(TokenType::And, "&&".into(), (32, 4)),
+            Token::new(TokenType::Eof, "".into(), (32, 6)),
         ];
 
         let mut lexer = Lexer::new(input.into());

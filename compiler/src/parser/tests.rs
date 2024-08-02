@@ -329,6 +329,18 @@ fn test_parsing_infix_expressions() -> Result<(), ParserError> {
             "==",
             ExpectedValue::Boolean(false),
         ),
+        (
+            "false && false",
+            ExpectedValue::Boolean(false),
+            "&&",
+            ExpectedValue::Boolean(false),
+        ),
+        (
+            "false || 0",
+            ExpectedValue::Boolean(false),
+            "||",
+            ExpectedValue::Integer(0),
+        ),
     ];
 
     for (input, left_value, operator, right_value) in infix_tests {

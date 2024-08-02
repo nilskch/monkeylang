@@ -284,10 +284,12 @@ fn eval_string_infix_expression(operator: &str, left: Object, right: Object) -> 
 }
 
 fn eval_boolean_infix_expression(operator: &str, left: Object, right: Object) -> EvaluationResult {
+    // TODO: return error instead
     let left_value = match left {
         Object::Boolean(value) => value,
         _ => return Ok(Object::Null),
     };
+    // TODO: return error instead
     let right_value = match right {
         Object::Boolean(value) => value,
         _ => return Ok(Object::Null),
@@ -296,6 +298,8 @@ fn eval_boolean_infix_expression(operator: &str, left: Object, right: Object) ->
     match operator {
         "==" => Ok(Object::Boolean(left_value == right_value)),
         "!=" => Ok(Object::Boolean(left_value != right_value)),
+        "&&" => Ok(Object::Boolean(left_value && right_value)),
+        "||" => Ok(Object::Boolean(left_value || right_value)),
         _ => Err(EvaluationError::new(format!(
             "unknown operator: {} {} {}",
             left.object_type(),

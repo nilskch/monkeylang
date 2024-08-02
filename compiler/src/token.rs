@@ -19,6 +19,8 @@ pub enum TokenType {
     Asterik,
     Slash,
 
+    And,
+    Or,
     Lt,
     Gt,
     LtEq,
@@ -68,6 +70,8 @@ impl Display for TokenType {
             TokenType::Asterik => write!(f, "*"),
             TokenType::Slash => write!(f, "/"),
 
+            TokenType::And => write!(f, "&&"),
+            TokenType::Or => write!(f, "||"),
             TokenType::Lt => write!(f, "<"),
             TokenType::Gt => write!(f, ">"),
             TokenType::LtEq => write!(f, "<="),
