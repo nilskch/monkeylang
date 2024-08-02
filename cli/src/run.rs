@@ -11,8 +11,8 @@ use compiler::parser::Parser;
 pub fn run(file_name: &String) {
     let source_code = match fs::read_to_string(file_name) {
         Ok(source_code) => source_code,
-        Err(err) => {
-            println!("{err}");
+        Err(_) => {
+            println!("ERROR: Can't open file '{file_name}'.");
             process::exit(1);
         }
     };
