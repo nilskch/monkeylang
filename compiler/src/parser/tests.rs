@@ -18,8 +18,7 @@ fn test_let_statements() -> Result<(), ParserError> {
         ),
     ];
     for (input, identifier, expected) in tests {
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
         let program = parser.parse_program()?;
 
         let num_stmt = program.statements.len();
@@ -75,8 +74,7 @@ fn test_return_statements() -> Result<(), ParserError> {
     ];
 
     for (input, expected) in tests {
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
         let program = parser.parse_program()?;
 
         let num_stmt = program.statements.len();
@@ -107,8 +105,7 @@ fn test_return_statements() -> Result<(), ParserError> {
 #[test]
 fn test_indentifier_expression() -> Result<(), ParserError> {
     let input = "foobar";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -147,8 +144,7 @@ fn test_indentifier_expression() -> Result<(), ParserError> {
 #[test]
 fn test_integer_literal_expression() -> Result<(), ParserError> {
     let input = "5";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -194,8 +190,7 @@ fn test_parsing_prefix_expressions() -> Result<(), ParserError> {
     ];
 
     for (input, operator, value) in prefix_tests {
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
         let program = parser.parse_program()?;
 
         let num_stmts = program.statements.len();
@@ -344,8 +339,7 @@ fn test_parsing_infix_expressions() -> Result<(), ParserError> {
     ];
 
     for (input, left_value, operator, right_value) in infix_tests {
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
         let program = parser.parse_program()?;
 
         let num_stmts = program.statements.len();
@@ -413,8 +407,7 @@ fn test_operator_precedence_parsing() -> Result<(), ParserError> {
     ];
 
     for (input, expected) in tests {
-        let lexer = Lexer::new(input.to_string());
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
         let program = parser.parse_program()?;
 
         let actual = program.to_string();
@@ -500,8 +493,7 @@ fn test_infix_expression(
 #[test]
 fn test_if_expression() -> Result<(), ParserError> {
     let input = "if (x < y) { x }";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -554,8 +546,7 @@ fn test_if_expression() -> Result<(), ParserError> {
 #[test]
 fn test_if_else_expression() -> Result<(), ParserError> {
     let input = "if (x < y) { x } else { y }";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -623,8 +614,7 @@ fn test_if_else_expression() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_function_literal() -> Result<(), ParserError> {
     let input = "fn(x, y) {x + y;}";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -686,8 +676,7 @@ fn test_parsing_function_literal() -> Result<(), ParserError> {
 #[test]
 fn test_object_expression_parsing() -> Result<(), ParserError> {
     let input = "add(1, 2 * 3, 4 + 5)";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let num_stmts = program.statements.len();
@@ -735,8 +724,7 @@ fn test_object_expression_parsing() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_string_literal() -> Result<(), ParserError> {
     let input = "\"hello world\"";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let stmt = &program.statements[0];
@@ -762,8 +750,7 @@ fn test_parsing_string_literal() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_array_literals() -> Result<(), ParserError> {
     let input = "[1, 2 * 2, 3 + 3]";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let stmt = &program.statements[0];
@@ -803,8 +790,7 @@ fn test_parsing_array_literals() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_index_expressions() -> Result<(), ParserError> {
     let input = "myArray[1 + 1]";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let stmt = &program.statements[0];
@@ -831,8 +817,7 @@ fn test_parsing_index_expressions() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
     let input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let stmt = &program.statements[0];
@@ -877,8 +862,7 @@ fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_empty_hash_literal() -> Result<(), ParserError> {
     let input = "{}";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = parser.parse_program()?;
 
     let stmt = &program.statements[0];
@@ -904,8 +888,7 @@ fn test_parsing_empty_hash_literal() -> Result<(), ParserError> {
 #[test]
 fn test_parsing_hash_literal_with_expression() -> Result<(), ParserError> {
     let input = "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}";
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
 
     let program = parser.parse_program()?;
 

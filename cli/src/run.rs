@@ -1,6 +1,4 @@
 use compiler::evaluator::Evaluator;
-use compiler::lexer::Lexer;
-use compiler::object::environment::Environment;
 use compiler::parser::Parser;
 use std::fs;
 use std::process;
@@ -14,8 +12,7 @@ pub fn run(file_name: &String) {
         }
     };
 
-    let lexer = Lexer::new(source_code);
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(source_code);
     let program = match parser.parse_program() {
         Ok(program) => program,
         Err(err) => {
@@ -24,10 +21,12 @@ pub fn run(file_name: &String) {
         }
     };
 
-    let env = Environment::new();
     let mut evaluator = Evaluator::new();
-    if let Err(err) = evaluator.eval_program(program, &env) {
+    if let Err(err) = evaluator.eval_program(program) {
         println!("{err}");
         process::exit(1);
     }
+
+    // print output_buffer to console
+    println!("{}", evaluator.output_buffer);
 }

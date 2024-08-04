@@ -24,7 +24,9 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(mut lexer: Lexer) -> Parser {
+    pub fn new(input: String) -> Parser {
+        let mut lexer = Lexer::new(input);
+
         Parser {
             cur_token: lexer.next_token(),
             peek_token: lexer.next_token(),

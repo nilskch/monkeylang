@@ -1,6 +1,4 @@
 use crate::evaluator::Evaluator;
-use crate::lexer::Lexer;
-use crate::object::environment::Environment;
 use crate::object::Object;
 use crate::parser::Parser;
 use std::io;
@@ -10,7 +8,6 @@ const PROMPT: &str = ">> ";
 
 pub fn start() {
     println!("Welcome to the Monkey Programming Language!");
-    let env = Environment::new();
     let mut evaluator = Evaluator::new();
 
     loop {
@@ -22,8 +19,7 @@ pub fn start() {
             .read_line(&mut input)
             .expect("Failed to read line");
 
-        let lexer = Lexer::new(input);
-        let mut parser = Parser::new(lexer);
+        let mut parser = Parser::new(input.to_string());
 
         let program = match parser.parse_program() {
             Ok(program) => program,
@@ -33,7 +29,7 @@ pub fn start() {
             }
         };
 
-        let result = match evaluator.eval_program(program, &env) {
+        let result = match evaluator.eval_program(program) {
             Ok(result) => result,
             Err(err) => {
                 println!("{err}");

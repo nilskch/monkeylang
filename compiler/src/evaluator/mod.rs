@@ -16,12 +16,14 @@ type EvaluationResult = Result<Object, EvaluationError>;
 
 pub struct Evaluator {
     pub output_buffer: String,
+    env: Env,
 }
 
 impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator {
             output_buffer: String::new(),
+            env: Environment::new(),
         }
     }
 
@@ -29,11 +31,11 @@ impl Evaluator {
         self.output_buffer = String::new()
     }
 
-    pub fn eval_program(&mut self, program: Program, env: &Env) -> EvaluationResult {
+    pub fn eval_program(&mut self, program: Program) -> EvaluationResult {
         let mut result = Object::Null;
 
         for stmt in program.statements {
-            let value = self.eval_statement(stmt, env)?;
+            let value = self.eval_statement(stmt, &Rc::clone(&self.env))?;
 
             match value {
                 Object::ReturnValue(value) => return Ok(*value),
