@@ -1,12 +1,9 @@
-use std::cell::RefCell;
-use std::fs;
-use std::process;
-use std::rc::Rc;
-
-use compiler::evaluator::eval_program;
+use compiler::evaluator::Evaluator;
 use compiler::lexer::Lexer;
 use compiler::object::environment::Environment;
 use compiler::parser::Parser;
+use std::fs;
+use std::process;
 
 pub fn run(file_name: &String) {
     let source_code = match fs::read_to_string(file_name) {
@@ -27,8 +24,9 @@ pub fn run(file_name: &String) {
         }
     };
 
-    let env = Rc::new(RefCell::new(Environment::new()));
-    if let Err(err) = eval_program(program, &env) {
+    let env = Environment::new();
+    let mut evaluator = Evaluator::new();
+    if let Err(err) = evaluator.eval_program(program, &env) {
         println!("{err}");
         process::exit(1);
     }

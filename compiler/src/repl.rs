@@ -1,19 +1,18 @@
-use crate::evaluator::eval_program;
+use crate::evaluator::Evaluator;
 use crate::lexer::Lexer;
 use crate::object::environment::Environment;
 use crate::object::Object;
 use crate::parser::Parser;
-use std::cell::RefCell;
 use std::io;
 use std::io::Write;
-use std::rc::Rc;
 
 const PROMPT: &str = ">> ";
 
 pub fn start() {
     println!("Welcome to the Monkey Programming Language!");
+    let env = Environment::new();
+    let mut evaluator = Evaluator::new();
 
-    let env = &Rc::from(RefCell::new(Environment::new()));
     loop {
         print!("{}", PROMPT);
         io::stdout().flush().unwrap();
@@ -29,17 +28,25 @@ pub fn start() {
         let program = match parser.parse_program() {
             Ok(program) => program,
             Err(err) => {
-                println!("{}", err);
+                println!("{err}");
                 continue;
             }
         };
 
-        match eval_program(program, env) {
-            Ok(result) => match result {
-                Object::Null => continue,
-                _ => println!("{}", result.inspect()),
-            },
-            Err(err) => println!("{}", err),
+        let result = match evaluator.eval_program(program, &env) {
+            Ok(result) => result,
+            Err(err) => {
+                println!("{err}");
+                continue;
+            }
+        };
+
+        print!("{}", evaluator.output_buffer);
+        evaluator.reset_output_buffer();
+
+        match result {
+            Object::Null => continue,
+            _ => println!("{}", result),
         }
     }
 }

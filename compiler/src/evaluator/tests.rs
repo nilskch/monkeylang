@@ -1,7 +1,5 @@
 use super::*;
-use crate::object::environment::Environment;
 use crate::{lexer::Lexer, object::Object, parser::Parser};
-use std::cell::RefCell;
 
 enum ExpectedValue {
     Integer(i64),
@@ -43,9 +41,9 @@ fn test_eval(input: &str) -> EvaluationResult {
         Ok(program) => program,
         Err(err) => panic!("{}", err),
     };
-    let env = &Rc::from(RefCell::from(Environment::new()));
-
-    eval_program(program, env)
+    let env = Environment::new();
+    let mut evaluator = Evaluator::new();
+    evaluator.eval_program(program, &env)
 }
 
 fn test_integer_object(object: &Object, expected: i64) {
