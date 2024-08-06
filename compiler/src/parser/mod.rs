@@ -21,20 +21,25 @@ pub struct Parser {
     pub lexer: Lexer,
     pub cur_token: Token,
     pub peek_token: Token,
+    pub peek_peek_token: Token,
 }
 
 impl Parser {
-    pub fn new(mut lexer: Lexer) -> Parser {
+    pub fn new(input: String) -> Parser {
+        let mut lexer = Lexer::new(input);
+
         Parser {
             cur_token: lexer.next_token(),
             peek_token: lexer.next_token(),
+            peek_peek_token: lexer.next_token(),
             lexer,
         }
     }
 
     pub fn next_token(&mut self) {
         self.cur_token = self.peek_token.clone();
-        self.peek_token = self.lexer.next_token();
+        self.peek_token = self.peek_peek_token.clone();
+        self.peek_peek_token = self.lexer.next_token();
     }
 
     fn expect_peek(&mut self, token_type: &TokenType) -> Result<(), ParserError> {
@@ -68,6 +73,7 @@ impl Parser {
         match self.cur_token.token_type {
             TokenType::Let => self.parse_let_statement(),
             TokenType::Return => self.parse_return_statement(),
+            TokenType::EmptyLine => Ok(Statement::EmptyLine),
             _ => self.parse_expression_statement(),
         }
     }
@@ -280,6 +286,10 @@ impl Parser {
         self.peek_token.token_type == *token_type
     }
 
+    fn peek_peek_token_is(&self, token_type: &TokenType) -> bool {
+        self.peek_peek_token.token_type == *token_type
+    }
+
     fn expect_cur_token(&self, token_type: &TokenType) -> Result<(), ParserError> {
         if self.cur_token_is(token_type) {
             Ok(())
@@ -355,6 +365,10 @@ impl Parser {
         self.expect_peek(&TokenType::LBrace)?;
 
         let consequence = self.parse_block_statement()?;
+
+        if self.peek_token_is(&TokenType::EmptyLine) && self.peek_peek_token_is(&TokenType::Else) {
+            self.next_token();
+        }
 
         let alternative = if self.peek_token_is(&TokenType::Else) {
             self.next_token();

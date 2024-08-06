@@ -3,6 +3,7 @@ use std::fmt;
 use crate::object::Object;
 
 use super::{error::EvaluationError, EvaluationResult};
+use std::fmt::Write;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Builtin {
@@ -38,7 +39,7 @@ impl Builtin {
         }
     }
 
-    pub fn apply_func(&self, args: Vec<Object>) -> EvaluationResult {
+    pub fn apply_func(&self, args: Vec<Object>, output_buffer: &mut String) -> EvaluationResult {
         match self {
             Builtin::Len => {
                 check_argument_len(args.len(), 1)?;
@@ -127,7 +128,7 @@ impl Builtin {
             }
             Builtin::Print => {
                 for arg in args.iter() {
-                    println!("{}", arg);
+                    writeln!(output_buffer, "{}", arg).unwrap();
                 }
                 Ok(Object::Null)
             }

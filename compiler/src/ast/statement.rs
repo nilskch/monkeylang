@@ -1,5 +1,5 @@
 use crate::token::Token;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter, Result, Write};
 
 use super::expression::{Expression, Identifier};
 
@@ -8,6 +8,7 @@ pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
     Expr(ExpressionStatement),
+    EmptyLine,
 }
 
 impl Display for Statement {
@@ -16,6 +17,7 @@ impl Display for Statement {
             Statement::Let(stmt) => write!(f, "{}", stmt),
             Statement::Return(stmt) => write!(f, "{}", stmt),
             Statement::Expr(stmt) => write!(f, "{}", stmt),
+            Statement::EmptyLine => write!(f, "\n"),
         }
     }
 }
@@ -26,7 +28,17 @@ impl Statement {
             Statement::Let(stmt) => &stmt.token.literal,
             Statement::Return(stmt) => &stmt.token.literal,
             Statement::Expr(stmt) => &stmt.token.literal,
+            Statement::EmptyLine => "\n",
         }
+    }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        match self {
+            Statement::Let(stmt) => stmt.format(output_buffer, depth),
+            Statement::Return(stmt) => stmt.format(output_buffer, depth),
+            Statement::Expr(stmt) => stmt.format(output_buffer, depth),
+            Statement::EmptyLine => writeln!(output_buffer, "").unwrap(),
+        };
     }
 }
 
@@ -46,6 +58,13 @@ impl Display for LetStatement {
 impl LetStatement {
     pub fn new(token: Token, name: Identifier, value: Expression) -> LetStatement {
         LetStatement { token, name, value }
+    }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        let prefix = "\t".repeat(depth);
+        write!(output_buffer, "{}let {} = ", prefix, self.name).unwrap();
+        self.value.format(output_buffer, depth);
+        writeln!(output_buffer, ";").unwrap();
     }
 }
 
@@ -68,6 +87,13 @@ impl ReturnStatement {
             return_value,
         }
     }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        let prefix = "\t".repeat(depth);
+        write!(output_buffer, "{}return ", prefix).unwrap();
+        self.return_value.format(output_buffer, depth);
+        writeln!(output_buffer, ";").unwrap()
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -85,6 +111,17 @@ impl Display for ExpressionStatement {
 impl ExpressionStatement {
     pub fn new(token: Token, expression: Expression) -> ExpressionStatement {
         ExpressionStatement { token, expression }
+    }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        let prefix = "\t".repeat(depth);
+        write!(output_buffer, "{}", prefix).unwrap();
+        self.expression.format(output_buffer, depth);
+        match self.expression {
+            Expression::IfElse(_) | Expression::Function(_) => {}
+            _ => write!(output_buffer, ";").unwrap(),
+        }
+        writeln!(output_buffer).unwrap();
     }
 }
 
@@ -106,5 +143,11 @@ impl Display for BlockStatement {
 impl BlockStatement {
     pub fn new(token: Token, statements: Vec<Statement>) -> BlockStatement {
         BlockStatement { token, statements }
+    }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        for stmt in &self.statements {
+            stmt.format(output_buffer, depth + 1);
+        }
     }
 }

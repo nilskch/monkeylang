@@ -14,18 +14,18 @@ pub struct Environment {
 pub type Env = Rc<RefCell<Environment>>;
 
 impl Environment {
-    pub fn new() -> Environment {
-        Environment {
+    pub fn new() -> Env {
+        Rc::new(RefCell::new(Environment {
             store: HashMap::new(),
             outer: None,
-        }
+        }))
     }
 
-    pub fn new_enclosed_environment(outer: &Env) -> Self {
-        Environment {
+    pub fn new_enclosed_environment(outer: &Env) -> Env {
+        Rc::new(RefCell::new(Environment {
             store: HashMap::new(),
             outer: Some(Rc::clone(outer)),
-        }
+        }))
     }
 
     pub fn get(&self, name: &str) -> Option<Object> {

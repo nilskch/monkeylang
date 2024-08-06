@@ -24,7 +24,9 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+        if let Some(token) = self.skip_whitespace() {
+            return token;
+        }
 
         let token = match self.ch {
             '=' => {
@@ -45,14 +47,7 @@ impl Lexer {
                     Token::new(TokenType::Bang, self.ch.into(), (self.line, self.col))
                 }
             }
-            '/' => {
-                if self.peek_char() == '/' {
-                    self.skip_line();
-                    return self.next_token();
-                } else {
-                    Token::new(TokenType::Slash, self.ch.into(), (self.line, self.col))
-                }
-            }
+            '/' => Token::new(TokenType::Slash, self.ch.into(), (self.line, self.col)),
             '&' => {
                 let position = (self.line, self.col);
                 if self.peek_char() == '&' {
@@ -153,15 +148,22 @@ impl Lexer {
         self.read_position += 1;
     }
 
-    fn skip_line(&mut self) {
-        while self.ch != '\n' && self.ch != '\0' {
+    fn skip_whitespace(&mut self) -> Option<Token> {
+        let mut line_break_count = 0;
+        let mut line = 0;
+        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
+            if self.ch == '\n' {
+                line_break_count += 1;
+                if line_break_count == 1 {
+                    line = self.line + 1;
+                }
+            }
             self.read_char();
         }
-    }
-
-    fn skip_whitespace(&mut self) {
-        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
-            self.read_char();
+        if line_break_count >= 2 {
+            Some(Token::new(TokenType::EmptyLine, "\n".into(), (line, 1)))
+        } else {
+            None
         }
     }
 
@@ -205,7 +207,7 @@ let ten = 10;
 
 let add = fn(x, y) {
         x + y;
-}; //
+};
 
 let result = add(five, ten);
 !-/*5;
@@ -213,24 +215,28 @@ let result = add(five, ten);
 
 if (5 < 10) {
     return true;
-} else { // comment foobar
+} else {
     return false;
 }
 
 10 == 10;
-10 != 9; // some comment
-10 <= 10; // whatever
+10 != 9;
+10 <= 10;
 10 >= 10;
 \"foobar\"
 \"foo bar\"
 [1, 2];
-{\"foo\": \"bar\"} // sd
-// foo
-// bar
-// blue
+{\"foo\": \"bar\"}
+
+
+
 if(;)
 &&
-|| &&";
+|| &&
+
+
+
+x";
 
         let tests = [
             Token::new(TokenType::If, "if".into(), (1, 1)),
@@ -247,6 +253,7 @@ if(;)
             Token::new(TokenType::Assign, "=".into(), (3, 9)),
             Token::new(TokenType::Int, "10".into(), (3, 11)),
             Token::new(TokenType::Semicolon, ";".into(), (3, 13)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (4, 1)),
             Token::new(TokenType::Let, "let".into(), (5, 1)),
             Token::new(TokenType::Ident, "add".into(), (5, 5)),
             Token::new(TokenType::Assign, "=".into(), (5, 9)),
@@ -263,6 +270,7 @@ if(;)
             Token::new(TokenType::Semicolon, ";".into(), (6, 14)),
             Token::new(TokenType::RBrace, "}".into(), (7, 1)),
             Token::new(TokenType::Semicolon, ";".into(), (7, 2)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (8, 1)),
             Token::new(TokenType::Let, "let".into(), (9, 1)),
             Token::new(TokenType::Ident, "result".into(), (9, 5)),
             Token::new(TokenType::Assign, "=".into(), (9, 12)),
@@ -285,6 +293,7 @@ if(;)
             Token::new(TokenType::Gt, ">".into(), (11, 8)),
             Token::new(TokenType::Int, "5".into(), (11, 10)),
             Token::new(TokenType::Semicolon, ";".into(), (11, 11)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (12, 1)),
             Token::new(TokenType::If, "if".into(), (13, 1)),
             Token::new(TokenType::LParen, "(".into(), (13, 4)),
             Token::new(TokenType::Int, "5".into(), (13, 5)),
@@ -302,6 +311,7 @@ if(;)
             Token::new(TokenType::False, "false".into(), (16, 12)),
             Token::new(TokenType::Semicolon, ";".into(), (16, 17)),
             Token::new(TokenType::RBrace, "}".into(), (17, 1)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (18, 1)),
             Token::new(TokenType::Int, "10".into(), (19, 1)),
             Token::new(TokenType::Eq, "==".into(), (19, 4)),
             Token::new(TokenType::Int, "10".into(), (19, 7)),
@@ -331,6 +341,7 @@ if(;)
             Token::new(TokenType::Colon, ":".into(), (26, 7)),
             Token::new(TokenType::String, "bar".into(), (26, 13)),
             Token::new(TokenType::RBrace, "}".into(), (26, 14)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (27, 1)),
             Token::new(TokenType::If, "if".into(), (30, 1)),
             Token::new(TokenType::LParen, "(".into(), (30, 3)),
             Token::new(TokenType::Semicolon, ";".into(), (30, 4)),
@@ -338,7 +349,9 @@ if(;)
             Token::new(TokenType::And, "&&".into(), (31, 1)),
             Token::new(TokenType::Or, "||".into(), (32, 1)),
             Token::new(TokenType::And, "&&".into(), (32, 4)),
-            Token::new(TokenType::Eof, "".into(), (32, 6)),
+            Token::new(TokenType::EmptyLine, "\n".into(), (33, 1)),
+            Token::new(TokenType::Ident, "x".into(), (36, 1)),
+            Token::new(TokenType::Eof, "".into(), (36, 2)),
         ];
 
         let mut lexer = Lexer::new(input.into());

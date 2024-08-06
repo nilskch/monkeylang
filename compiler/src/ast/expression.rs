@@ -3,7 +3,7 @@ use crate::token::Token;
 use std::hash::{Hash, Hasher};
 use std::{
     collections::HashMap,
-    fmt::{Display, Formatter, Result},
+    fmt::{Display, Formatter, Result, Write},
 };
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -57,6 +57,107 @@ impl Expression {
             Expression::Array(arr) => &arr.token.literal,
             Expression::Index(index) => &index.token.literal,
             Expression::Hash(hash_literal) => &hash_literal.token.literal,
+        }
+    }
+
+    pub fn format(&self, output_buffer: &mut String, depth: usize) {
+        let prefix = "\t".repeat(depth);
+        match self {
+            Expression::Ident(ident) => write!(output_buffer, "{}", ident.value).unwrap(),
+            Expression::Integer(integer) => write!(output_buffer, "{}", integer.value).unwrap(),
+            Expression::Prefix(prefix_expr) => {
+                write!(output_buffer, "{}", prefix_expr.operator).unwrap();
+                prefix_expr.right.format(output_buffer, depth);
+            }
+            Expression::Infix(infix_expr) => {
+                infix_expr.left.format(output_buffer, depth);
+                write!(output_buffer, " {} ", infix_expr.operator).unwrap();
+                infix_expr.right.format(output_buffer, depth);
+            }
+            Expression::Boolean(bool_expr) => write!(output_buffer, "{}", bool_expr.value).unwrap(),
+            Expression::IfElse(if_expr) => {
+                write!(output_buffer, "if (").unwrap();
+                if_expr.condition.format(output_buffer, depth);
+                if if_expr.consequence.statements.len() == 0 {
+                    write!(output_buffer, ") {{}}").unwrap();
+                } else {
+                    writeln!(output_buffer, ") {{").unwrap();
+                    if_expr.consequence.format(output_buffer, depth);
+                    write!(output_buffer, "{}}}", prefix).unwrap();
+                }
+
+                if let Some(alternative) = &if_expr.alternative {
+                    if alternative.statements.len() == 0 {
+                        write!(output_buffer, " else {{}}").unwrap();
+                    } else {
+                        writeln!(output_buffer, " else {{").unwrap();
+                        alternative.format(output_buffer, depth);
+                        write!(output_buffer, "{}}}", prefix).unwrap();
+                    }
+                }
+            }
+            Expression::String(string) => write!(output_buffer, "\"{}\"", string.value).unwrap(),
+            Expression::Array(arr) => {
+                write!(output_buffer, "[").unwrap();
+                for (idx, element) in arr.elements.iter().enumerate() {
+                    if idx != 0 {
+                        write!(output_buffer, ", ").unwrap();
+                    }
+                    element.format(output_buffer, depth);
+                }
+                write!(output_buffer, "]").unwrap();
+            }
+            Expression::Index(index) => {
+                index.left.format(output_buffer, depth);
+                write!(output_buffer, "[").unwrap();
+                index.index.format(output_buffer, depth);
+                write!(output_buffer, "]").unwrap();
+            }
+            Expression::Function(func) => {
+                write!(output_buffer, "fn(").unwrap();
+                for (idx, param) in func.parameters.iter().enumerate() {
+                    if idx != 0 {
+                        write!(output_buffer, ", ").unwrap();
+                    }
+                    write!(output_buffer, "{}", param.value).unwrap();
+                }
+                if func.body.statements.len() == 0 {
+                    write!(output_buffer, ") {{}}").unwrap();
+                } else {
+                    writeln!(output_buffer, ") {{").unwrap();
+                    func.body.format(output_buffer, depth);
+                    write!(output_buffer, "{}}}", prefix).unwrap();
+                }
+            }
+            Expression::Call(call_expr) => {
+                call_expr.function.format(output_buffer, depth);
+                write!(output_buffer, "(").unwrap();
+                for (idx, arg) in call_expr.arguments.iter().enumerate() {
+                    if idx != 0 {
+                        write!(output_buffer, ", ").unwrap();
+                    }
+                    arg.format(output_buffer, depth);
+                }
+                write!(output_buffer, ")").unwrap();
+            }
+            Expression::Hash(hash_literal) => {
+                if hash_literal.pairs.len() == 0 {
+                    write!(output_buffer, "{{}}").unwrap();
+                } else {
+                    let prefix = "\t".repeat(depth + 1);
+                    writeln!(output_buffer, "{{").unwrap();
+                    for (idx, (key, value)) in hash_literal.clone().pairs.into_iter().enumerate() {
+                        write!(output_buffer, "{}", prefix).unwrap();
+                        key.format(output_buffer, depth + 1);
+                        write!(output_buffer, ":").unwrap();
+                        value.format(output_buffer, depth + 1);
+                        if idx != hash_literal.pairs.len() - 1 {
+                            writeln!(output_buffer, ",").unwrap();
+                        }
+                    }
+                    write!(output_buffer, "\n{}}}", "\t".repeat(depth)).unwrap();
+                }
+            }
         }
     }
 }

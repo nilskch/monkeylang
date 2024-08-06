@@ -1,7 +1,5 @@
 use super::*;
-use crate::object::environment::Environment;
-use crate::{lexer::Lexer, object::Object, parser::Parser};
-use std::cell::RefCell;
+use crate::{object::Object, parser::Parser};
 
 enum ExpectedValue {
     Integer(i64),
@@ -37,15 +35,13 @@ fn test_eval_integer_expression() -> Result<(), EvaluationError> {
 }
 
 fn test_eval(input: &str) -> EvaluationResult {
-    let lexer = Lexer::new(input.to_string());
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(input.to_string());
     let program = match parser.parse_program() {
         Ok(program) => program,
         Err(err) => panic!("{}", err),
     };
-    let env = &Rc::from(RefCell::from(Environment::new()));
-
-    eval_program(program, env)
+    let mut evaluator = Evaluator::new();
+    evaluator.eval_program(program)
 }
 
 fn test_integer_object(object: &Object, expected: i64) {
