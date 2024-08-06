@@ -73,6 +73,7 @@ impl Evaluator {
                 env.borrow_mut().set(let_stmt.name.value.to_string(), value);
                 Ok(Object::Null)
             }
+            Statement::EmptyLine => Ok(Object::Null),
         }
     }
 

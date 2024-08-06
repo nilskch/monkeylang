@@ -21,6 +21,14 @@ impl Program {
     pub fn new() -> Program {
         Program { statements: vec![] }
     }
+
+    pub fn format(&self) -> String {
+        let mut output_buffer = String::new();
+        for stmt in &self.statements {
+            stmt.format(&mut output_buffer, 0);
+        }
+        output_buffer
+    }
 }
 
 impl Display for Program {
