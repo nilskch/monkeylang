@@ -1,11 +1,13 @@
-pub mod environment;
-
-use crate::ast::{expression::Identifier, statement::BlockStatement};
-use crate::evaluator::builtin::Builtin;
-use environment::Env;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
 use std::hash::{Hash, Hasher};
+
+use environment::Env;
+
+use crate::ast::{expression::Identifier, statement::BlockStatement};
+use crate::evaluator::builtin::Builtin;
+
+pub mod environment;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Object {
@@ -76,16 +78,16 @@ impl Object {
             Object::String(_) => format!("{}", self),
             Object::Array(_) => format!("{}", self),
             Object::Hash(_) => format!("{}", self),
-            Object::Builtin(_) => format!("builtin function"),
+            Object::Builtin(_) => "builtin function".to_string(),
             Object::Null => String::from("null"),
         }
     }
 
     pub fn is_hashable(&self) -> bool {
-        match self {
-            Object::Boolean(_) | Object::String(_) | Object::Integer(_) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Object::Boolean(_) | Object::String(_) | Object::Integer(_)
+        )
     }
 }
 

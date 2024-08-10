@@ -1,7 +1,8 @@
-use super::statement::Statement;
-
 use std::fmt::{Display, Formatter, Result};
 
+use super::statement::Statement;
+
+#[derive(Default)]
 pub struct Program {
     pub statements: Vec<Statement>,
 }
@@ -18,10 +19,6 @@ impl Program {
 }
 
 impl Program {
-    pub fn new() -> Program {
-        Program { statements: vec![] }
-    }
-
     pub fn format(&self) -> String {
         let mut output_buffer = String::new();
         for stmt in &self.statements {

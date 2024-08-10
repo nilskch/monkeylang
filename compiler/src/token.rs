@@ -104,7 +104,7 @@ impl Display for TokenType {
             TokenType::Return => write!(f, "return"),
 
             // Other
-            TokenType::EmptyLine => write!(f, "\n"),
+            TokenType::EmptyLine => writeln!(f),
         }
     }
 }

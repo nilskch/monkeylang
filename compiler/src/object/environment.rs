@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use super::Object;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub struct Environment {
     store: HashMap<String, Object>,
     outer: Option<Env>,
@@ -15,10 +15,7 @@ pub type Env = Rc<RefCell<Environment>>;
 
 impl Environment {
     pub fn new() -> Env {
-        Rc::new(RefCell::new(Environment {
-            store: HashMap::new(),
-            outer: None,
-        }))
+        Rc::new(RefCell::new(Self::default()))
     }
 
     pub fn new_enclosed_environment(outer: &Env) -> Env {

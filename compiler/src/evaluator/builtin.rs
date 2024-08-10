@@ -65,7 +65,7 @@ impl Builtin {
                     }
                 };
 
-                if arr.len() > 0 {
+                if !arr.is_empty() {
                     Ok(arr[0].clone())
                 } else {
                     Ok(Object::Null)
@@ -84,7 +84,7 @@ impl Builtin {
                     }
                 };
 
-                if arr.len() > 0 {
+                if !arr.is_empty() {
                     Ok(arr[arr.len() - 1].clone())
                 } else {
                     Ok(Object::Null)
@@ -103,7 +103,7 @@ impl Builtin {
                     }
                 };
 
-                if arr.len() > 0 {
+                if !arr.is_empty() {
                     Ok(Object::Array(arr[1..].to_vec()))
                 } else {
                     Ok(Object::Null)

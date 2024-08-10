@@ -40,7 +40,7 @@ fn test_eval(input: &str) -> EvaluationResult {
         Ok(program) => program,
         Err(err) => panic!("{}", err),
     };
-    let mut evaluator = Evaluator::new();
+    let mut evaluator = Evaluator::default();
     evaluator.eval_program(program)
 }
 

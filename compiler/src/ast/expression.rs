@@ -78,7 +78,7 @@ impl Expression {
             Expression::IfElse(if_expr) => {
                 write!(output_buffer, "if (").unwrap();
                 if_expr.condition.format(output_buffer, depth);
-                if if_expr.consequence.statements.len() == 0 {
+                if if_expr.consequence.statements.is_empty() {
                     write!(output_buffer, ") {{}}").unwrap();
                 } else {
                     writeln!(output_buffer, ") {{").unwrap();
@@ -87,7 +87,7 @@ impl Expression {
                 }
 
                 if let Some(alternative) = &if_expr.alternative {
-                    if alternative.statements.len() == 0 {
+                    if alternative.statements.is_empty() {
                         write!(output_buffer, " else {{}}").unwrap();
                     } else {
                         writeln!(output_buffer, " else {{").unwrap();
@@ -121,7 +121,7 @@ impl Expression {
                     }
                     write!(output_buffer, "{}", param.value).unwrap();
                 }
-                if func.body.statements.len() == 0 {
+                if func.body.statements.is_empty() {
                     write!(output_buffer, ") {{}}").unwrap();
                 } else {
                     writeln!(output_buffer, ") {{").unwrap();
@@ -141,7 +141,7 @@ impl Expression {
                 write!(output_buffer, ")").unwrap();
             }
             Expression::Hash(hash_literal) => {
-                if hash_literal.pairs.len() == 0 {
+                if hash_literal.pairs.is_empty() {
                     write!(output_buffer, "{{}}").unwrap();
                 } else {
                     let prefix = "\t".repeat(depth + 1);

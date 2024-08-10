@@ -1,5 +1,5 @@
-pub mod builtin;
-mod error;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 use builtin::Builtin;
 use error::EvaluationError;
@@ -7,26 +7,21 @@ use error::EvaluationError;
 use crate::ast::expression::{Expression, HashLiteral, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
-use crate::object::environment::{Env, Environment};
 use crate::object::{Function, Object};
-use std::collections::HashMap;
-use std::rc::Rc;
+use crate::object::environment::{Env, Environment};
+
+pub mod builtin;
+mod error;
 
 type EvaluationResult = Result<Object, EvaluationError>;
 
+#[derive(Default)]
 pub struct Evaluator {
     pub output_buffer: String,
     env: Env,
 }
 
 impl Evaluator {
-    pub fn new() -> Evaluator {
-        Evaluator {
-            output_buffer: String::new(),
-            env: Environment::new(),
-        }
-    }
-
     pub fn reset_output_buffer(&mut self) {
         self.output_buffer = String::new()
     }
@@ -80,7 +75,7 @@ impl Evaluator {
     fn eval_expression(&mut self, expr: Expression, env: &Env) -> EvaluationResult {
         match expr {
             Expression::Integer(integer_literal) => Ok(Object::Integer(integer_literal.value)),
-            Expression::Boolean(boolean_litereal) => Ok(Object::Boolean(boolean_litereal.value)),
+            Expression::Boolean(boolean_literal) => Ok(Object::Boolean(boolean_literal.value)),
             Expression::Prefix(prefix_expr) => {
                 let right = self.eval_expression(*prefix_expr.right, env)?;
                 self.eval_prefix_expression(&prefix_expr.operator, right)
@@ -210,12 +205,12 @@ impl Evaluator {
 
     fn eval_expressions(
         &mut self,
-        exprs: Vec<Expression>,
+        expressions: Vec<Expression>,
         env: &Env,
     ) -> Result<Vec<Object>, EvaluationError> {
         let mut result = vec![];
 
-        for expr in exprs {
+        for expr in expressions {
             let evaluated = self.eval_expression(expr, env)?;
             result.push(evaluated);
         }
@@ -396,7 +391,7 @@ impl Evaluator {
         Ok(Object::Null)
     }
 
-    fn is_truthy(&mut self, object: Object) -> bool {
+    fn is_truthy(&self, object: Object) -> bool {
         match object {
             Object::Null => false,
             Object::Boolean(val) => val,

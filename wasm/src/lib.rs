@@ -8,7 +8,7 @@ pub fn eval_monkey_code(input: String) -> String {
         Ok(program) => program,
         Err(err) => return err.to_string(),
     };
-    let mut evaluator = Evaluator::new();
+    let mut evaluator = Evaluator::default();
     if let Err(err) = evaluator.eval_program(program) {
         return err.to_string();
     }

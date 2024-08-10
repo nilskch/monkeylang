@@ -21,7 +21,7 @@ pub fn run(file_name: &String) {
         }
     };
 
-    let mut evaluator = Evaluator::new();
+    let mut evaluator = Evaluator::default();
     if let Err(err) = evaluator.eval_program(program) {
         println!("{err}");
         process::exit(1);

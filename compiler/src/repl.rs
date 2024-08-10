@@ -8,7 +8,7 @@ const PROMPT: &str = ">> ";
 
 pub fn start() {
     println!("Welcome to the Monkey Programming Language!");
-    let mut evaluator = Evaluator::new();
+    let mut evaluator = Evaluator::default();
 
     loop {
         print!("{}", PROMPT);

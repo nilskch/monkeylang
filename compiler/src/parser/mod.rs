@@ -58,7 +58,7 @@ impl Parser {
     }
 
     pub fn parse_program(&mut self) -> Result<Program, ParserError> {
-        let mut program = Program::new();
+        let mut program = Program::default();
 
         while self.cur_token.token_type != TokenType::Eof {
             let stmt = self.parse_statement()?;

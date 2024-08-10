@@ -17,7 +17,7 @@ impl Display for Statement {
             Statement::Let(stmt) => write!(f, "{}", stmt),
             Statement::Return(stmt) => write!(f, "{}", stmt),
             Statement::Expr(stmt) => write!(f, "{}", stmt),
-            Statement::EmptyLine => write!(f, "\n"),
+            Statement::EmptyLine => writeln!(f),
         }
     }
 }
@@ -37,7 +37,7 @@ impl Statement {
             Statement::Let(stmt) => stmt.format(output_buffer, depth),
             Statement::Return(stmt) => stmt.format(output_buffer, depth),
             Statement::Expr(stmt) => stmt.format(output_buffer, depth),
-            Statement::EmptyLine => writeln!(output_buffer, "").unwrap(),
+            Statement::EmptyLine => writeln!(output_buffer).unwrap(),
         };
     }
 }

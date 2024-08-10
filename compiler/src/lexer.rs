@@ -102,7 +102,7 @@ impl Lexer {
                     // next line is an early return for the function, not variable assignment
                     return Token::new(token_type, literal, position);
                 }
-                if self.is_digit(self.ch) {
+                if self.ch.is_ascii_digit() {
                     let literal = self.read_number();
                     // next line is an early return for the function, not variable assignment
                     return Token::new(TokenType::Int, literal, position);
@@ -122,11 +122,11 @@ impl Lexer {
         while self.ch != '"' && self.ch != '\0' {
             self.read_char();
         }
-        return self.input[pos..self.position].into();
+        self.input[pos..self.position].into()
     }
 
     fn peek_char(&self) -> char {
-        if self.read_position >= self.input.len().into() {
+        if self.read_position >= self.input.len() {
             '\0'
         } else {
             self.input.chars().nth(self.read_position).unwrap()
@@ -140,10 +140,7 @@ impl Lexer {
         } else {
             self.col += 1
         }
-        self.ch = match self.input.chars().nth(self.read_position) {
-            Some(ch) => ch,
-            None => '\0',
-        };
+        self.ch = self.input.chars().nth(self.read_position).unwrap_or('\0');
         self.position = self.read_position;
         self.read_position += 1;
     }
@@ -177,20 +174,15 @@ impl Lexer {
 
     fn read_number(&mut self) -> String {
         let position = self.position;
-        while self.is_digit(self.ch) {
+        while self.ch.is_ascii_digit() {
             self.read_char();
         }
         self.input[position..self.position].into()
     }
 
     // using this function instead of the std lib functions to get exact control
-    fn is_digit(&mut self, ch: char) -> bool {
-        '0' <= ch && ch <= '9'
-    }
-
-    // using this function instead of the std lib functions to get exact control
-    fn is_letter(&mut self, ch: char) -> bool {
-        'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+    fn is_letter(&self, ch: char) -> bool {
+        ch.is_ascii_lowercase() || ch.is_ascii_uppercase() || ch == '_'
     }
 }
 
