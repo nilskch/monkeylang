@@ -24,6 +24,9 @@ impl Program {
         for stmt in &self.statements {
             stmt.format(&mut output_buffer, 0);
         }
+        if output_buffer.ends_with("\n\n") {
+            output_buffer.pop();
+        }
         output_buffer
     }
 }

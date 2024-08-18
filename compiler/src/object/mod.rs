@@ -29,7 +29,7 @@ impl Display for Object {
             Object::Boolean(val) => write!(f, "{}", val),
             Object::ReturnValue(val) => write!(f, "{}", val),
             Object::Function(val) => write!(f, "{}", val),
-            Object::String(val) => write!(f, "\"{}\"", val),
+            Object::String(val) => write!(f, "{}", val),
             Object::Builtin(val) => write!(f, "{}", val),
             Object::Array(elements) => {
                 let elements: Vec<String> = elements

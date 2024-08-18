@@ -128,8 +128,9 @@ impl Builtin {
             }
             Builtin::Print => {
                 for arg in args.iter() {
-                    writeln!(output_buffer, "{}", arg).unwrap();
+                    write!(output_buffer, "{}", arg).unwrap();
                 }
+                writeln!(output_buffer).unwrap();
                 Ok(Object::Null)
             }
         }

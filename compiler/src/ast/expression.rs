@@ -149,7 +149,7 @@ impl Expression {
                     for (idx, (key, value)) in hash_literal.clone().pairs.into_iter().enumerate() {
                         write!(output_buffer, "{}", prefix).unwrap();
                         key.format(output_buffer, depth + 1);
-                        write!(output_buffer, ":").unwrap();
+                        write!(output_buffer, ": ").unwrap();
                         value.format(output_buffer, depth + 1);
                         if idx != hash_literal.pairs.len() - 1 {
                             writeln!(output_buffer, ",").unwrap();
