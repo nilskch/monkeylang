@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as wasm from "wasm";
 import url from "wasm/wasm_bg.wasm?url";
+import { defaultCode } from "./utils/examples";
 import Navbar from "./components/Navbar";
 import Editor from "./components/Editor";
 import Output from "./components/Output";
@@ -10,7 +11,7 @@ import Message from "./components/Message";
 const OPTIONAL_BASE_PATH = "/monkeylang";
 
 const App = () => {
-  const [code, setCode] = useState<string>('print("Hello, World!")');
+  const [code, setCode] = useState<string>(defaultCode);
   const [output, setOutput] = useState<string>("");
   const [showShareLinkMessage, setShowShareLinkMessage] =
     useState<boolean>(false);
@@ -37,13 +38,22 @@ const App = () => {
   }, []);
 
   const handleFormat = async () => {
-    const formattedCode = wasm.format_monkey_code(code);
-    setCode(formattedCode);
+    setOutput("");
+    try {
+      const formattedCode = wasm.format_monkey_code(code);
+      setCode(formattedCode);
+    } catch (err) {
+      setOutput(err as string);
+    }
   };
 
   const handleRun = () => {
-    const result = wasm.eval_monkey_code(code);
-    setOutput(result);
+    try {
+      const result = wasm.eval_monkey_code(code);
+      setOutput(result);
+    } catch (err) {
+      setOutput(err as string);
+    }
   };
 
   const handleShare = () => {
