@@ -28,9 +28,6 @@ fn main() {
                         .required(true),
                 ),
         )
-        .after_help(
-            "Checkout the monkey playground (https://nilskch.github.io/monkeylang/) for example code of the monkey programming language!",
-        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("run") {
