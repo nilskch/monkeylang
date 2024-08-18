@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import * as wasm from "wasm";
+import url from "wasm/wasm_bg.wasm?url";
 import Navbar from "./components/Navbar";
 import Editor from "./components/Editor";
 import Output from "./components/Output";
@@ -13,6 +15,16 @@ const App = () => {
   const [showShareLinkMessage, setShowShareLinkMessage] =
     useState<boolean>(false);
 
+  // initialize wasm
+  useEffect(() => {
+    fetch(url).then((response) =>
+      response.arrayBuffer().then((bytes) => {
+        wasm.initSync(bytes);
+      }),
+    );
+  }, []);
+
+  // load shared code
   useEffect(() => {
     try {
       const raw = window.location.pathname.split("/").pop();
@@ -24,9 +36,14 @@ const App = () => {
     }
   }, []);
 
-  const handleFormat = () => {};
+  const handleFormat = async () => {
+    const formattedCode = wasm.format_monkey_code(code);
+    setCode(formattedCode);
+  };
+
   const handleRun = () => {
-    setOutput("TODO: Run code here!");
+    const result = wasm.eval_monkey_code(code);
+    setOutput(result);
   };
 
   const handleShare = () => {
