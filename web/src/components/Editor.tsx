@@ -16,9 +16,8 @@ const Editor = ({ code, setCode }: EditorProps) => {
         fontSize="14px"
         highlightActiveLine={true}
         setOptions={{
-          enableLiveAutocompletion: false,
           showLineNumbers: true,
-          tabSize: 2,
+          tabSize: 4,
         }}
       />
     </div>

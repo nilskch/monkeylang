@@ -19,6 +19,8 @@ Install the monkey cli with cargo:
 ```
 $ git clone https://github.com/nilskch/monkeylang.git && cd monkeylang
 $ cargo install --path cli
+```
+```
 $ monkey --help
 Use the monkey cli to run or format monkey code!
 

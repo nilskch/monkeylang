@@ -3,9 +3,16 @@ import Button from "../ui/Button";
 type ActionBarProps = {
   handleRun: () => void;
   handleFormat: () => void;
+  handleShare: () => void;
+  handleExamples: () => void;
 };
 
-const ActionBar = ({ handleRun, handleFormat }: ActionBarProps) => {
+const ActionBar = ({
+  handleRun,
+  handleFormat,
+  handleShare,
+  handleExamples,
+}: ActionBarProps) => {
   return (
     <div className="flex justify-between">
       <div className="flex gap-2">
@@ -13,8 +20,8 @@ const ActionBar = ({ handleRun, handleFormat }: ActionBarProps) => {
         <Button onClick={handleFormat}>Format</Button>
       </div>
       <div className="flex gap-2">
-        <Button onClick={() => console.log("TODO")}>Share</Button>
-        <Button onClick={() => console.log("TODO")}>Examples</Button>
+        <Button onClick={handleShare}>Share</Button>
+        <Button onClick={handleExamples}>Examples</Button>
       </div>
     </div>
   );
