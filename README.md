@@ -16,9 +16,23 @@ Install the monkey cli with cargo:
 ```
 $ git clone https://github.com/nilskch/monkeylang.git && cd monkeylang
 $ cargo install --path cli
+$ monkey --help
+Use the monkey cli to run or format monkey code!
+
+Usage: monkey [cmd] [file]
+
+Arguments:
+  [cmd]   'run' or 'fmt'.
+  [file]  Path to the .mky file.
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
+
 ### Usage
+Start the monkey repl:
 ```
 $ monkey
 Welcome to the Monkey Programming Language!
@@ -36,6 +50,7 @@ Format monkey code:
 ```
 $ monkey fmt main.mky
 ```
+
 
 
 ## Resources

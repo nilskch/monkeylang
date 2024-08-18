@@ -7,12 +7,15 @@ type ActionBarProps = {
 
 const ActionBar = ({ handleRun, handleFormat }: ActionBarProps) => {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <div className="flex justify-between">
+      <div className="flex gap-2">
         <Button onClick={handleRun}>Run</Button>
         <Button onClick={handleFormat}>Format</Button>
       </div>
-      <Button onClick={() => console.log("TODO")}>Examples</Button>
+      <div className="flex gap-2">
+        <Button onClick={() => console.log("TODO")}>Share</Button>
+        <Button onClick={() => console.log("TODO")}>Examples</Button>
+      </div>
     </div>
   );
 };
