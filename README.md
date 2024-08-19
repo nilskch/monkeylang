@@ -4,9 +4,6 @@ This is a Rust implementation of the Monkey programming language created by [Tho
 This is a fun project to learn more about interpreters and compilers and to learn Rust programming language.
 The interpreter is written in pure Rust [without any third party dependencies](https://github.com/nilskch/monkeylang/blob/main/compiler/Cargo.toml).
 
-At the moment this is "just" a tree-walking interpreter. I currently work on a bytecode compiler and a virtual machine to make the interpreter faster
-(hence I called the crate "compiler" and not "interpreter" before you nitpickers call me out).
-
 ## Playground
 Run monkey code and discover all language features online in the [wasm based playground](https://nilskch.github.io/monkeylang).
 There are plenty examples that showcase all language features.
