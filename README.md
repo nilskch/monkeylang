@@ -12,7 +12,7 @@ Run monkey code and discover all language features online in the [wasm based pla
 There are plenty examples that showcase all language features.
 
 ### Disclaimer
-The formatter is no quite there yet. It is time consuming to get the details right. I just wanted to test if my approach is about right.
+The formatter is not quite there yet. It is time consuming to get the details right. I just wanted to test if my approach is about right.
 
 ## CLI
 You can use the monkey CLI to run monkey code locally. You can install it using cargo.
