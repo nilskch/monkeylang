@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install wasm
-        run: rustc --version && cargo --version
+        run: cargo install wasm-pack
+      - name: Build wasm
+        run: cd wasm && wasm-pack build --target web --out-name wasm --out-dir ../web/wasm"
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
