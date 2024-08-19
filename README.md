@@ -2,7 +2,7 @@
 
 This is a Rust implementation of the Monkey programming language created by [Thorsten Ball](https://github.com/mrnugget).
 This is a fun project to learn more about interpreters and compilers and to learn Rust programming language.
-The interpreter is written in pure Rust [without any external libraries](https://github.com/nilskch/monkeylang/blob/main/compiler/Cargo.toml).
+The interpreter is written in pure Rust [without any third party dependencies](https://github.com/nilskch/monkeylang/blob/main/compiler/Cargo.toml).
 
 At the moment this is "just" a tree-walking interpreter. I currently work on a bytecode compiler and a virtual machine to make the interpreter faster
 (hence I called the crate "compiler" and not "interpreter" before you nitpickers call me out).
@@ -45,7 +45,7 @@ Start the monkey repl:
 $ monkey
 Welcome to the Monkey Programming Language!
 >> print("Hello World")
-"Hello World"
+Hello World
 >>
 ```
 

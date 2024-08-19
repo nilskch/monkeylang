@@ -13,7 +13,7 @@ print("The double of 5 is: ", double(5));
 print("The triple of 5 is: ", triple(5));
 `;
 
-const fibonacci = `llet fibonacci = fn(x) {
+const fibonacci = `let fibonacci = fn(x) {
 	if (x == 0 || x == 1) {
 		return x;
 	}

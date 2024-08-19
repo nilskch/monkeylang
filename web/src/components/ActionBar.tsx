@@ -1,5 +1,5 @@
-import Button from "../ui/Button";
-import Dropdown from "../ui/Dropdown";
+import Button from "../components/ui/Button";
+import Dropdown from "../components/ui/Dropdown";
 
 type ActionBarProps = {
   handleRun: () => void;
