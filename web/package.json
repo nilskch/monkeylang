@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build --base=/monkeylang/",
+    "build": "tsc -b && vite build --base=/monkeylang/ && cat dist/index.html > dist/404.html",
     "build:wasm": "cd ../wasm && wasm-pack build --target web --out-name wasm --out-dir ../web/wasm",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
