@@ -11,6 +11,9 @@ At the moment this is "just" a tree-walking interpreter. I currently work on a b
 Run monkey code and discover all language features online in the [wasm based playground](https://nilskch.github.io/monkeylang).
 There are plenty examples that showcase all language features.
 
+### Disclaimer
+The formatter is no quite there yet. It is time consuming to get the details right. I just wanted to test if my approach is about right.
+
 ## CLI
 You can use the monkey CLI to run monkey code locally. You can install it using cargo.
 

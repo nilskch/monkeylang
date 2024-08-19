@@ -9,7 +9,7 @@ const Button = ({ children, onClick }: ButtonProps) => {
   return (
     <button
       onClick={onClick}
-      className="bg-black hover:bg-gray-900 text-white font-bold py-1 px-3 rounded"
+      className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-50 shadow-sm ring-1 ring-inset hover:bg-gray-700"
     >
       {children}
     </button>

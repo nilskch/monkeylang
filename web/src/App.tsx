@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import * as wasm from "wasm";
 import url from "wasm/wasm_bg.wasm?url";
-import { defaultCode } from "./utils/examples";
+import {
+  defaultCode,
+  fibonacci,
+  ifElse,
+  maps,
+  variables,
+} from "./lib/examples";
 import Navbar from "./components/Navbar";
 import Editor from "./components/Editor";
 import Output from "./components/Output";
@@ -67,7 +73,27 @@ const App = () => {
     setShowShareLinkMessage(true);
   };
 
-  const handleExamples = () => {};
+  const handleExamples = (value: string) => {
+    switch (value) {
+      case "hello_world":
+        setCode(defaultCode);
+        break;
+      case "fibonacci":
+        setCode(fibonacci);
+        break;
+      case "variables":
+        setCode(variables);
+        break;
+      case "if_else":
+        setCode(ifElse);
+        break;
+      case "arrays_with_maps":
+        setCode(maps);
+        break;
+      default:
+        setCode("");
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen">
