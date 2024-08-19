@@ -7,8 +7,8 @@ use error::EvaluationError;
 use crate::ast::expression::{Expression, HashLiteral, Identifier, IfExpression};
 use crate::ast::program::Program;
 use crate::ast::statement::{BlockStatement, Statement};
-use crate::object::{Function, Object};
 use crate::object::environment::{Env, Environment};
+use crate::object::{Function, Object};
 
 pub mod builtin;
 mod error;
