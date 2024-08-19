@@ -19,7 +19,7 @@ jobs:
       - name: Install wasm
         run: cargo install wasm-pack
       - name: Build wasm
-        run: cd wasm && wasm-pack build --target web --out-name wasm --out-dir ../web/wasm"
+        run: cd wasm && wasm-pack build --target web --out-name wasm --out-dir ../web/wasm
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
