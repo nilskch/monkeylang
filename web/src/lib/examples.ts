@@ -54,11 +54,11 @@ const maps = `let people = [{
 	"age": 24,
 	"name": "Anna"
 }, {
-	"name": "Bob",
-	"age": 63
+	"age": 63,
+	"name": "Bob"
 }, {
-	"name": "Chris",
-	"age": 16
+	"age": 16,
+	"name": "Chris"
 }];
 
 let getName = fn(person) {
@@ -77,8 +77,8 @@ let map = fn(arr, f) {
 	iter(arr, []);
 };
 
-let peopleArr = map(people, getName);
-print(peopleArr);
+let peopleNames = map(people, getName);
+print(peopleNames);
 `;
 
 export { defaultCode, fibonacci, variables, ifElse, maps };

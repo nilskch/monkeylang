@@ -6,7 +6,7 @@ use std::{
     fmt::{Display, Formatter, Result, Write},
 };
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum Expression {
     Ident(Identifier),
     Integer(IntegerLiteral),
@@ -146,7 +146,15 @@ impl Expression {
                 } else {
                     let prefix = "\t".repeat(depth + 1);
                     writeln!(output_buffer, "{{").unwrap();
-                    for (idx, (key, value)) in hash_literal.clone().pairs.into_iter().enumerate() {
+
+                    let mut pairs = hash_literal
+                        .clone()
+                        .pairs
+                        .into_iter()
+                        .collect::<Vec<(Expression, Expression)>>();
+                    pairs.sort();
+
+                    for (idx, (key, value)) in pairs.iter().enumerate() {
                         write!(output_buffer, "{}", prefix).unwrap();
                         key.format(output_buffer, depth + 1);
                         write!(output_buffer, ": ").unwrap();
@@ -162,7 +170,7 @@ impl Expression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -180,7 +188,7 @@ impl Identifier {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
@@ -198,7 +206,7 @@ impl IntegerLiteral {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct StringLiteral {
     pub token: Token,
     pub value: String,
@@ -216,7 +224,7 @@ impl StringLiteral {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct PrefixExpression {
     pub token: Token,
     pub operator: String,
@@ -239,7 +247,7 @@ impl PrefixExpression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct InfixExpression {
     pub token: Token,
     pub left: Box<Expression>,
@@ -269,7 +277,7 @@ impl InfixExpression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct BooleanLiteral {
     pub token: Token,
     pub value: bool,
@@ -287,7 +295,7 @@ impl BooleanLiteral {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct IfExpression {
     pub token: Token,
     pub condition: Box<Expression>,
@@ -321,7 +329,7 @@ impl IfExpression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Vec<Identifier>,
@@ -351,7 +359,7 @@ impl FunctionLiteral {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct CallExpression {
     pub token: Token,
     pub function: Box<Expression>, // Identifier or FunctionLiteral
@@ -381,7 +389,7 @@ impl CallExpression {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ArrayLiteral {
     pub token: Token,
     pub elements: Vec<Expression>,
@@ -406,7 +414,7 @@ impl ArrayLiteral {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct Index {
     pub token: Token,
     pub left: Box<Expression>,
@@ -433,6 +441,18 @@ impl Index {
 pub struct HashLiteral {
     pub token: Token,
     pub pairs: HashMap<Expression, Expression>,
+}
+
+impl Ord for HashLiteral {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.token.literal.cmp(&other.token.literal)
+    }
+}
+
+impl PartialOrd for HashLiteral {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Display for HashLiteral {

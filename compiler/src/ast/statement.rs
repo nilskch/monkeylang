@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter, Result, Write};
 
 use super::expression::{Expression, Identifier};
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum Statement {
     Let(LetStatement),
     Return(ReturnStatement),
@@ -42,7 +42,7 @@ impl Statement {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct LetStatement {
     pub token: Token,      // token.Let
     pub name: Identifier,  // five
@@ -68,7 +68,7 @@ impl LetStatement {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Expression,
@@ -96,7 +96,7 @@ impl ReturnStatement {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ExpressionStatement {
     pub token: Token,
     pub expression: Expression,
@@ -125,7 +125,7 @@ impl ExpressionStatement {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct BlockStatement {
     pub token: Token,
     pub statements: Vec<Statement>,
