@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter, Result};
 
 pub type TokenPosition = (i64, i64);
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Ord, PartialOrd)]
 pub enum TokenType {
     Illegal,
     Eof,
@@ -109,7 +109,7 @@ impl Display for TokenType {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,

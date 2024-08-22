@@ -1,7 +1,7 @@
 # Monkeylang
 
 This is a Rust implementation of the Monkey programming language created by [Thorsten Ball](https://github.com/mrnugget).
-This is a fun project to learn more about interpreters and compilers and to learn Rust Programming Language.
+This is a fun project to learn more about interpreters and compilers and to learn the Rust Programming Language.
 The interpreter is written in pure Rust [without any third party dependencies](https://github.com/nilskch/monkeylang/blob/main/compiler/Cargo.toml).
 
 ## Playground
