@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: clippy version
+        run: cargo clippy --version
       - name: cargo clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: cargo test
