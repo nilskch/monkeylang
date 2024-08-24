@@ -60,6 +60,6 @@ $ monkey fmt main.mky
 ## Resources
 I used the following resources for this project:
 - The book "[Writing An Interpreter In Go](https://interpreterbook.com/)" by [Thorsten Ball](https://github.com/mrnugget)
-- The sequel "[Writing A Compiler In Go](https://compilerbook.com/)" by [Thorsten Ball](https://github.com/mrnugget) (currently in progress)
+- The sequel "[Writing A Compiler In Go](https://compilerbook.com/)" by [Thorsten Ball](https://github.com/mrnugget)
 - THE Rust book "[The Rust Programming Language](https://doc.rust-lang.org/book/)" by [Steve Klabnik](https://github.com/steveklabnik) and [Carol Nichols](https://github.com/carols10cents)
 - The book "[Rust for Rustaceans](https://rust-for-rustaceans.com/)" by [Jon Gjengset](https://github.com/jonhoo)

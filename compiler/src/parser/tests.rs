@@ -217,7 +217,7 @@ fn test_parsing_prefix_expressions() -> Result<(), ParserError> {
             operator, prefix_expr.operator
         );
 
-        test_literal_expression(&*prefix_expr.right, value);
+        test_literal_expression(&prefix_expr.right, value);
     }
     Ok(())
 }
@@ -480,14 +480,14 @@ fn test_infix_expression(
         _ => panic!("Expected Expression::Infix"),
     };
 
-    test_literal_expression(&*infix_expr.left, left);
+    test_literal_expression(&infix_expr.left, left);
     assert_eq!(
         infix_expr.operator, operator,
         "infix_expr.operator not '{}'. got='{}'",
         operator, infix_expr.operator
     );
 
-    test_literal_expression(&*infix_expr.right, right);
+    test_literal_expression(&infix_expr.right, right);
 }
 
 #[test]
@@ -515,7 +515,7 @@ fn test_if_expression() -> Result<(), ParserError> {
     };
 
     test_infix_expression(
-        &*if_expr.condition,
+        &if_expr.condition,
         ExpectedValue::String("x".to_string()),
         "<",
         ExpectedValue::String("y".to_string()),
@@ -536,7 +536,7 @@ fn test_if_expression() -> Result<(), ParserError> {
 
     test_identifier(&consequence.expression, "x".to_string());
 
-    if let Some(_) = if_expr.alternative {
+    if if_expr.alternative.is_some() {
         panic!("if_expr.alternative supposed to be empty");
     }
 
@@ -568,7 +568,7 @@ fn test_if_else_expression() -> Result<(), ParserError> {
     };
 
     test_infix_expression(
-        &*if_expr.condition,
+        &if_expr.condition,
         ExpectedValue::String(String::from("x")),
         "<",
         ExpectedValue::String(String::from("y")),
@@ -697,7 +697,7 @@ fn test_object_expression_parsing() -> Result<(), ParserError> {
         _ => panic!("Expected Expression::Call"),
     };
 
-    test_identifier(&*object_expr.function, String::from("add"));
+    test_identifier(&object_expr.function, String::from("add"));
     assert_eq!(
         object_expr.arguments.len(),
         3,
@@ -839,9 +839,9 @@ fn test_parsing_hash_literal_string_keys() -> Result<(), ParserError> {
     );
 
     let mut expected = HashMap::new();
-    expected.insert(String::from("one"), 1 as i64);
-    expected.insert(String::from("two"), 2 as i64);
-    expected.insert(String::from("three"), 3 as i64);
+    expected.insert(String::from("one"), 1_i64);
+    expected.insert(String::from("two"), 2_i64);
+    expected.insert(String::from("three"), 3_i64);
 
     for (key, value) in hash_expr.pairs.iter() {
         let string_literal = match key {

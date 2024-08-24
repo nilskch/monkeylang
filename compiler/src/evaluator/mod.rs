@@ -112,6 +112,7 @@ impl Evaluator {
     }
 
     fn eval_hash_literal(&mut self, hash_literal: HashLiteral, env: &Env) -> EvaluationResult {
+        #[allow(clippy::mutable_key_type)]
         let mut pairs = HashMap::new();
 
         for (key, value) in hash_literal.pairs.into_iter() {
@@ -140,6 +141,7 @@ impl Evaluator {
         }
     }
 
+    #[allow(clippy::mutable_key_type)]
     fn eval_hash_index_expression(
         &mut self,
         hash: HashMap<Object, Object>,
